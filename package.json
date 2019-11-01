@@ -10,7 +10,10 @@
     "react": "^16.11.0",
     "react-dom": "^16.11.0",
     "react-scripts": "3.2.0",
-    "typescript": "3.6.4"
+    "react-three-fiber": "^3.0.7",
+    "three": "^0.110.0",
+    "typescript": "3.6.4",
+    "use-query-params": "^0.4.3"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -32,5 +35,13 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "electron": "^7.0.0",
+    "prettier": "^1.18.2",
+    "tslint": "^5.20.0",
+    "tslint-config-prettier": "^1.18.0",
+    "tslint-config-standard": "^8.0.1",
+    "tslint-plugin-prettier": "^2.0.1"
   }
 }
