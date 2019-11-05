@@ -9,12 +9,12 @@ export interface Region {
 }
 
 export interface Sampler {
-  input: Region
-  output: Region
+  in: Region
+  out: Region
 }
 
 export interface SceneProps {
-  videoUrl: string
+  videoUrl?: string
   viewPort: Region
   samplers: Sampler[]
 }
@@ -26,8 +26,8 @@ export interface UseVideoState {
 }
 
 export function useVideoTexture(
-  videoUrl: string,
-): UseVideoState & { texture: THREE.Texture } {
+  videoUrl?: string,
+): UseVideoState & { texture?: THREE.Texture } {
   const [state, setState] = React.useState<UseVideoState>({
     loading: true,
     videoWidth: 0,
@@ -35,6 +35,9 @@ export function useVideoTexture(
   })
 
   const texture = useMemo(() => {
+    if (!videoUrl) {
+      return
+    }
     const video = document.createElement('video')
     video.src = videoUrl
     video.autoplay = true
@@ -79,14 +82,14 @@ export const Scene: React.FunctionComponent<SceneProps> = ({
           top: inTop,
           width: inWidth,
           height: inHeight,
-        } = sampler.input
+        } = sampler.in
 
         const {
           left: outLeft,
           top: outTop,
           width: outWidth,
           height: outHeight,
-        } = sampler.output
+        } = sampler.out
 
         return (
           <mesh

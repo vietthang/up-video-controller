@@ -63,17 +63,17 @@ const App: React.FC = () => {
     viewPort: { left: 0, top: 0, width: 1280, height: 720 },
     samplers: [
       {
-        input: { left: 0, top: 0, width: 5376 / 2, height: 192 },
-        output: { left: 0, top: 0, width: 360, height: 192 },
+        in: { left: 0, top: 0, width: 5376 / 2, height: 192 },
+        out: { left: 0, top: 0, width: 360, height: 192 },
       },
       {
-        input: { left: 5376 / 2, top: 0, width: 5376 / 2, height: 192 },
-        output: { left: 640, top: 0, width: 360, height: 192 },
+        in: { left: 5376 / 2, top: 0, width: 5376 / 2, height: 192 },
+        out: { left: 640, top: 0, width: 360, height: 192 },
       },
     ],
   })
 
-  const [q] = useQueryParam('props', StringParam)
+  const [q] = useQueryParam('config', StringParam)
 
   useEffect(() => {
     if (!q) {
@@ -87,11 +87,13 @@ const App: React.FC = () => {
     }
   }, [q])
 
-  useEffectAsync(async () => {
-    const { ipcRenderer } = await import('electron')
+  useEffect(() => {
+    const { ipcRenderer }: typeof import('electron') = window.require(
+      'electron',
+    )
 
     const ipcEventHandler = (evt: IpcRendererEvent, message: any) => {
-      setSceneProps(message.payload)
+      setSceneProps(message)
     }
 
     ipcRenderer.on('updateScene', ipcEventHandler)
@@ -101,17 +103,14 @@ const App: React.FC = () => {
   })
 
   useEffect(() => {
-    const windowMessageHnadler = (evt: MessageEvent) => {
-      if (evt.data !== 'updateScene') {
-        return
-      }
+    const windowMessageHandler = (evt: MessageEvent) => {
       setSceneProps(evt.data.payload)
     }
 
-    window.addEventListener('message', windowMessageHnadler)
+    window.addEventListener('message', windowMessageHandler)
 
     return () => {
-      window.removeEventListener('message', windowMessageHnadler)
+      window.removeEventListener('message', windowMessageHandler)
     }
   })
 
@@ -119,10 +118,8 @@ const App: React.FC = () => {
     <Canvas
       invalidateFrameloop={false}
       style={{
-        left: sceneProps.viewPort.left,
-        top: sceneProps.viewPort.top,
-        width: sceneProps.viewPort.width,
-        height: sceneProps.viewPort.height,
+        width: '100%',
+        height: '100%',
       }}
       orthographic={true}
     >

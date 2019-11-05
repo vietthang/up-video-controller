@@ -1,6 +1,11 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import { StringParam, useQueryParam } from 'use-query-params'
 import { Display, Region } from './common'
 import { SamplerPropView } from './SamplerPropView'
+
+interface Config {
+  displays: Display[]
+}
 
 function useDisplays(): Display[] {
   const [displays, setDisplays] = useState<Display[]>([
@@ -16,33 +21,33 @@ function useDisplays(): Display[] {
     },
   ])
 
-  // const state = useEffectAsync(async () => {
-  //   // const { screen } = await import('electron')
-  //   // const syncDisplays = () =>
-  //   //   setDisplays(
-  //   //     screen.getAllDisplays().map(display => ({
-  //   //       id: display.id.toString(),
-  //   //       viewPort: {
-  //   //         left: display.bounds.x,
-  //   //         top: display.bounds.y,
-  //   //         width: display.bounds.height,
-  //   //         height: display.bounds.height,
-  //   //       },
-  //   //     })),
-  //   //   )
-  //   // screen.addListener('display-added', syncDisplays)
-  //   // screen.addListener('display-removed', syncDisplays)
-  //   // screen.addListener('display-metrics-changed', syncDisplays)
-  //   // return () => {
-  //   //   screen.removeListener('display-metrics-changed', syncDisplays)
-  //   //   screen.removeListener('display-added', syncDisplays)
-  //   //   screen.removeListener('display-removed', syncDisplays)
-  //   // }
-  // }, [])
+  const [configQuery] = useQueryParam('config', StringParam)
 
-  // if (state.state === 'error') {
-  //   console.error('error', state.error)
-  // }
+  useEffect(() => {
+    if (!configQuery) {
+      return
+    }
+    try {
+      const config: Config = JSON.parse(configQuery)
+      setDisplays(config.displays)
+    } catch {
+      // ignore
+    }
+  }, [configQuery])
+
+  useEffect(() => {
+    const electron: typeof import('electron') = window.require('electron')
+
+    const handler = (evt: any, config: Config) => {
+      setDisplays(config.displays)
+    }
+
+    electron.ipcRenderer.on('updateConfig', handler)
+
+    return () => {
+      electron.ipcRenderer.off('updateConfig', handler)
+    }
+  }, [])
 
   return displays
 }

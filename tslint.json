@@ -11,9 +11,6 @@
     "object-literal-sort-keys": false,
     "no-shadowed-variable": false,
     "interface-name": false,
-    "no-console": {
-      "severity": "warning",
-      "options": ["debug", "info", "log", "time", "timeEnd", "trace"]
-    }
+    "strict-type-predicates": false
   }
 }

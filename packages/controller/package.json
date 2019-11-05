@@ -1,5 +1,5 @@
 {
-  "name": "longscreen",
+  "name": "@up-video-controller/controller",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -12,7 +12,8 @@
     "react": "^16.11.0",
     "react-dom": "^16.11.0",
     "react-scripts": "3.2.0",
-    "typescript": "3.6.4"
+    "typescript": "3.6.4",
+    "use-query-params": "^0.4.3"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -35,13 +36,5 @@
       "last 1 safari version"
     ]
   },
-  "devDependencies": {
-    "@types/ramda": "^0.26.33",
-    "electron": "^7.0.0",
-    "prettier": "^1.18.2",
-    "tslint": "^5.20.0",
-    "tslint-config-prettier": "^1.18.0",
-    "tslint-config-standard": "^8.0.1",
-    "tslint-plugin-prettier": "^2.0.1"
-  }
+  "devDependencies": {}
 }

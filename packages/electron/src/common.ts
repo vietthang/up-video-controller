@@ -14,9 +14,3 @@ export interface Display {
   id: string
   viewPort: Region
 }
-
-export interface SceneProps {
-  videoUrl?: string
-  viewPort: Region
-  samplers: Sampler[]
-}

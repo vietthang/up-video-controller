@@ -19,13 +19,10 @@ export function useEffectAsync(
     state: 'pending',
   })
 
-  const [unmountCallback, setUnmountCallback] = useState<
-    (() => Resolvable<void | undefined>) | undefined
-  >()
-
-  const [active, setActive] = useState<boolean>(true)
-
   useEffect(() => {
+    let active = true
+    let unmountCallback: (() => Resolvable<void | undefined>) | undefined
+
     Promise.resolve(callback())
       .then(ret => {
         setEffectState({ state: 'finished' })
@@ -34,7 +31,7 @@ export function useEffectAsync(
           return
         }
         if (active) {
-          setUnmountCallback(ret)
+          unmountCallback = ret
           return
         }
         // resolved after unmount, just call the release
@@ -43,14 +40,14 @@ export function useEffectAsync(
       .catch(error => setEffectState({ state: 'error', error }))
 
     return () => {
-      setActive(false)
+      active = false
       if (unmountCallback) {
         Promise.resolve(unmountCallback()).catch(error =>
           setEffectState({ state: 'error', error }),
         )
       }
     }
-  }, [callback, active, unmountCallback, ...deps])
+  }, [...deps])
 
   return effectState
 }
