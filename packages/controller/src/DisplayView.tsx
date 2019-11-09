@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { StringParam, useQueryParam } from 'use-query-params'
 import { Display, Region } from './common'
 import { SamplerPropView } from './SamplerPropView'
+import { useEffectAsync } from './utils'
 
 interface Config {
   displays: Display[]
@@ -35,7 +36,7 @@ function useDisplays(): Display[] {
     }
   }, [configQuery])
 
-  useEffect(() => {
+  useEffectAsync(() => {
     const electron: typeof import('electron') = window.require('electron')
 
     const handler = (evt: any, config: Config) => {

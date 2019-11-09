@@ -35,6 +35,7 @@ export const SamplerPropView: React.FunctionComponent<SamplerPropViewProps> = ({
           <InputNumber
             min={boundRange[0]}
             max={boundRange[1]}
+            style={{ marginRight: '8px' }}
             value={range[0]}
             onChange={value => {
               if (value === undefined) {

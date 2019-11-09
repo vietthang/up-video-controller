@@ -11,6 +11,16 @@ export type AsyncState =
   | { state: 'finished' }
   | { state: 'error'; error: any }
 
+function toAsync(
+  cb: EffectAyncCallback,
+): Promise<void | (() => Resolvable<void | undefined>)> {
+  return new Promise((resolve, reject) => {
+    return Promise.resolve(cb())
+      .then(resolve)
+      .catch(reject)
+  })
+}
+
 export function useEffectAsync(
   callback: EffectAyncCallback,
   deps: DependencyList = [],
@@ -23,7 +33,7 @@ export function useEffectAsync(
     let active = true
     let unmountCallback: (() => Resolvable<void | undefined>) | undefined
 
-    Promise.resolve(callback())
+    Promise.resolve(toAsync(callback))
       .then(ret => {
         setEffectState({ state: 'finished' })
 

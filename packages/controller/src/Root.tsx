@@ -1,31 +1,22 @@
 import 'antd/dist/antd.css'
 import './Root.css'
 
-import {
-  Button,
-  Col,
-  Collapse,
-  Divider,
-  Form,
-  Icon,
-  Layout,
-  Row,
-  Upload,
-} from 'antd'
+import { Button, Collapse, Divider, Form, Icon, Layout, Upload } from 'antd'
 import { UploadFile } from 'antd/lib/upload/interface'
 import { remove, update } from 'ramda'
 import React, { useEffect, useState } from 'react'
-import { Region, Sampler, SceneProps } from './common'
+import { generateControlPoints, Region, Sampler, SceneProps } from './common'
 import { DisplayView } from './DisplayView'
 import { SamplerHeader } from './SamplerHeader'
 import { SamplerView } from './SamplerView'
+import { useEffectAsync } from './utils'
 
 const { Content } = Layout
 const { Dragger } = Upload
 
 type BrowserWindow = import('electron').BrowserWindow
 
-export const Root: React.FunctionComponent = () => {
+export const Root: React.FunctionComponent = React.memo(() => {
   const [videoUrl, setVideoUrl] = useState<string | undefined>(undefined)
   const [[videoWidth, videoHeight], setVideoSize] = useState([0, 0])
   const [viewPort, setViewport] = useState<Region>({
@@ -49,6 +40,14 @@ export const Root: React.FunctionComponent = () => {
         width: 100,
         height: 100,
       },
+      config: {
+        type: 'bilinear',
+        linear: true,
+        resolution: 16,
+        controlsX: 1,
+        controlsY: 1,
+        controlPoints: generateControlPoints(1, 1),
+      },
     },
   ])
 
@@ -71,7 +70,7 @@ export const Root: React.FunctionComponent = () => {
     BrowserWindow | undefined
   >()
 
-  useEffect(() => {
+  useEffectAsync(() => {
     const electron: typeof import('electron').remote = window.require(
       'electron',
     ).remote
@@ -183,120 +182,128 @@ export const Root: React.FunctionComponent = () => {
   return (
     <Layout>
       <Content>
-        <Row gutter={[16, 16]}>
-          <Col span={6} />
-          <Col span={12} id="main">
-            <div id="main">
-              <h1>Video Controller</h1>
+        <Form
+          labelCol={{
+            xs: { span: 24 },
+            sm: { span: 4 },
+          }}
+          wrapperCol={{
+            xs: { span: 24 },
+            sm: { span: 20 },
+          }}
+        >
+          <div id="main">
+            <h1>Video Controller</h1>
 
-              <Divider>
-                <h2>Pick Video File</h2>
-              </Divider>
+            <Divider>
+              <h2>Pick Video File</h2>
+            </Divider>
 
-              <Dragger
-                multiple={false}
-                directory={false}
-                accept=".mp4"
-                fileList={fileList}
-                beforeUpload={file => {
-                  setVideoUrl(
-                    file.path
-                      ? window
-                          .require('url')
-                          .pathToFileURL(file.path)
-                          .toString()
-                      : URL.createObjectURL(file),
-                  )
-                  return false
-                }}
-                onChange={({ file }) => {
-                  setFileList([file])
-                }}
-              >
-                <p className="ant-upload-drag-icon">
-                  <Icon type="inbox" />
-                </p>
-                <p className="ant-upload-text">
-                  Click or drag file to this area to select file
-                </p>
-              </Dragger>
+            <Dragger
+              multiple={false}
+              directory={false}
+              accept=".mp4"
+              fileList={fileList}
+              beforeUpload={file => {
+                setVideoUrl(
+                  file.path
+                    ? window
+                        .require('url')
+                        .pathToFileURL(file.path)
+                        .toString()
+                    : URL.createObjectURL(file),
+                )
+                return false
+              }}
+              onChange={({ file }) => {
+                setFileList([file])
+              }}
+            >
+              <p className="ant-upload-drag-icon">
+                <Icon type="inbox" />
+              </p>
+              <p className="ant-upload-text">
+                Click or drag file to this area to select file
+              </p>
+            </Dragger>
 
-              <Divider>
-                <h2>Setup Canvas Viewport</h2>
-              </Divider>
-              <DisplayView viewport={viewPort} setViewport={setViewport} />
+            <Divider>
+              <h2>Setup Canvas Viewport</h2>
+            </Divider>
+            <DisplayView viewport={viewPort} setViewport={setViewport} />
 
-              <Divider>
-                <h2>Setup Samplers</h2>
-              </Divider>
-              <Form
-                labelCol={{
-                  xs: { span: 24 },
-                  sm: { span: 4 },
-                }}
-                wrapperCol={{
-                  xs: { span: 24 },
-                  sm: { span: 20 },
-                }}
-              >
-                <Collapse
-                  bordered={true}
-                  activeKey={samplers.map((_, index) => index.toString())}
-                >
-                  {samplers.map((sampler, index) => (
-                    <SamplerView
-                      // disabled={true}
-                      videoWidth={videoWidth}
-                      videoHeight={videoHeight}
-                      outputWidth={viewPort.width}
-                      outputHeight={viewPort.height}
-                      sampler={sampler}
-                      key={index.toString()}
-                      header={
-                        <SamplerHeader
-                          title={`Sampler #${index}`}
-                          action={() => setSamplers(remove(index, 1, samplers))}
-                        ></SamplerHeader>
+            <Divider>
+              <h2>Setup Samplers</h2>
+            </Divider>
+
+            <Collapse
+              bordered={true}
+              activeKey={samplers.map((_, index) => index.toString())}
+            >
+              {samplers.map((sampler, index) => (
+                <SamplerView
+                  videoWidth={videoWidth}
+                  videoHeight={videoHeight}
+                  outputWidth={viewPort.width}
+                  outputHeight={viewPort.height}
+                  sampler={sampler}
+                  key={index.toString()}
+                  header={
+                    <SamplerHeader
+                      title={`Sampler #${index}`}
+                      deleteAction={() =>
+                        setSamplers(remove(index, 1, samplers))
                       }
+                      sampler={sampler}
                       setSampler={sampler =>
                         setSamplers(update(index, sampler, samplers))
                       }
-                    ></SamplerView>
-                  ))}
-                </Collapse>
+                    ></SamplerHeader>
+                  }
+                  setSampler={sampler =>
+                    setSamplers(update(index, sampler, samplers))
+                  }
+                ></SamplerView>
+              ))}
+            </Collapse>
 
-                <Form.Item>
-                  <Button
-                    type="primary"
-                    onClick={() => {
-                      setSamplers([
-                        ...samplers,
-                        {
-                          in: {
-                            left: 0,
-                            top: 0,
-                            width: 1,
-                            height: 1,
-                          },
-                          out: {
-                            left: 0,
-                            top: 0,
-                            width: 1,
-                            height: 1,
-                          },
-                        },
-                      ])
-                    }}
-                  >
-                    Add
-                  </Button>
-                </Form.Item>
-              </Form>
-            </div>
-          </Col>
-          <Col span={6} />
-        </Row>
+            <Form.Item>
+              <Button
+                type="primary"
+                onClick={() => {
+                  setSamplers([
+                    ...samplers,
+                    {
+                      in: {
+                        left: 0,
+                        top: 0,
+                        width: 1,
+                        height: 1,
+                      },
+                      out: {
+                        left: 0,
+                        top: 0,
+                        width: 1,
+                        height: 1,
+                      },
+                      config: {
+                        type: 'bilinear',
+                        linear: true,
+                        resolution: 32,
+                        controlsX: 1,
+                        controlsY: 1,
+                        controlPoints: generateControlPoints(1, 1),
+                      },
+                    },
+                  ])
+                }}
+              >
+                Add
+              </Button>
+            </Form.Item>
+          </div>
+        </Form>
       </Content>
     </Layout>
   )
-}
+})

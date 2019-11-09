@@ -15,10 +15,7 @@
     "strict": true,
     "outDir": "./dist",
     "baseUrl": "./src",
-    "lib": [
-      "esnext.asynciterable",
-      "dom"
-    ],
+    "lib": ["esnext", "dom", "es2019"],
     "skipLibCheck": true,
     "jsx": "react",
     "allowJs": false,
@@ -27,9 +24,7 @@
     "isolatedModules": true,
     "noEmit": true
   },
-  "include": [
-    "src"
-  ],
+  "include": ["src"],
   "plugins": [
     {
       "name": "typescript-tslint-plugin",

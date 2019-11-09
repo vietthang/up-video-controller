@@ -1,4 +1,6 @@
 #main {
   background: white;
   padding: 16px;
+  width: 960px;
+  margin: 16px auto;
 }
