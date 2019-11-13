@@ -1,5 +1,4 @@
-import React, { useEffect, useMemo } from 'react'
-import { useCanvas, useThree } from 'react-three-fiber'
+import React, { useMemo } from 'react'
 import * as THREE from 'three'
 import { Point, Region, Sampler } from './common'
 import { MeshNode } from './MeshNode'
@@ -57,20 +56,11 @@ export interface SceneProps {
 
 export const Scene: React.FunctionComponent<SceneProps> = ({
   videoUrl,
-  viewPort,
   samplers,
 }) => {
   const { texture, loading, videoWidth, videoHeight } = useVideoTexture(
     videoUrl,
   )
-
-  // const { setDefaultCamera } = useThree()
-
-  // useEffect(() => {
-  //   const camera = new THREE.OrthographicCamera(0, 1, 0, 1, 1, 1000)
-  //   camera.position.z = 75
-  //   setDefaultCamera(camera)
-  // }, [setDefaultCamera])
 
   if (loading || !texture) {
     // TODO maybe display loading or something?
@@ -86,7 +76,6 @@ export const Scene: React.FunctionComponent<SceneProps> = ({
         return (
           <MeshNode
             texture={texture}
-            viewPort={viewPort}
             sampler={sampler}
             renderPoints={sampler.renderPoints}
           ></MeshNode>

@@ -172,112 +172,13 @@ export const EditSamplerView: React.FC<SamplerNodeProps> = ({
     sampler.config.controlsX,
     sampler.config.controlsY,
     controlPoints,
+    xPointCount,
+    yPointCount,
   ])
 
   useEffect(() => {
     setRenderPoints(localRenderPoints)
-  }, [localRenderPoints])
-
-  // const positionBuffer = useMemo(() => {
-  //   return new Float32Array(controlPoints.length * VERTEX_FLOAT_SIZE)
-  // }, [controlPoints.length])
-
-  // useEffect(() => {
-  //   for (let y = 0; y < vPointCount + 1; y++) {
-  //     for (let x = 0; y < hPointCount + 1; x++) {
-  //       const index = x + y * (hPointCount + 1)
-  //       const renderPoint = renderPoints[index]
-  //       positionBuffer[index * VERTEX_FLOAT_SIZE + 0] = renderPoint.x
-  //       positionBuffer[index * VERTEX_FLOAT_SIZE + 1] = renderPoint.y
-  //       positionBuffer[index * VERTEX_FLOAT_SIZE + 2] = 0
-  //       positionBuffer[index * VERTEX_FLOAT_SIZE + 3] = x / (hPointCount + 1)
-  //       positionBuffer[index * VERTEX_FLOAT_SIZE + 4] = y / (vPointCount + 1)
-  //     }
-  //   }
-  // }, [positionBuffer, renderPoints])
-
-  // const positionBufferAttribute = useMemo(() => {
-  //   let i = 0
-  //   for (const renderPoint of renderPoints) {
-  //     positionBuffer[i++] = renderPoint.x
-  //     positionBuffer[i++] = renderPoint.y
-  //     positionBuffer[i++] = 0
-  //   }
-  //   return new THREE.Float32BufferAttribute(positionBuffer, 3)
-  // }, [renderPoints, positionBuffer])
-
-  // const uvAttribute = useMemo(() => {
-  //   const buffer = new Float32Array((hPointCount + 1) * (vPointCount + 1) * 2)
-  //   for (let y = 0; y < vPointCount + 1; y++) {
-  //     for (let x = 0; y < hPointCount + 1; x++) {
-  //       const index = x + y * (hPointCount + 1)
-  //       buffer[index * 2 + 0] = x / (hPointCount + 1)
-  //       buffer[index * 2 + 1] = y / (vPointCount + 1)
-  //     }
-  //   }
-  //   return new THREE.Float32BufferAttribute(buffer, 2)
-  // }, [hPointCount, vPointCount])
-
-  // const normalBufferAttribute = useMemo(() => {
-  //   const buffer = new Float32Array((hPointCount + 1) * (vPointCount + 1) * 2)
-  //   for (let y = 0; y < vPointCount + 1; y++) {
-  //     for (let x = 0; y < hPointCount + 1; x++) {
-  //       const index = x + y * (hPointCount + 1)
-  //       buffer[index * 2 + 0] = 0
-  //       buffer[index * 2 + 1] = 0
-  //       buffer[index * 2 + 2] = 1
-  //     }
-  //   }
-  //   return new THREE.Float32BufferAttribute(buffer, 3)
-  // }, [hPointCount, vPointCount])
-
-  // const indexBufferAttribute = useMemo(() => {
-  //   const buffer = new Uint16Array(hPointCount * vPointCount * 6)
-  //   let i = 0
-  //   for (let y = 0; y < vPointCount + 1; y++) {
-  //     for (let x = 0; y < hPointCount + 1; x++) {
-  //       if (x + 1 < hPointCount && y + 1 < vPointCount) {
-  //         buffer[i++] = (y + 0) * hPointCount + (x + 0)
-  //         buffer[i++] = (y + 1) * hPointCount + (x + 0)
-  //         buffer[i++] = (y + 1) * hPointCount + (x + 1)
-
-  //         buffer[i++] = (y + 0) * hPointCount + (x + 0)
-  //         buffer[i++] = (y + 1) * hPointCount + (x + 1)
-  //         buffer[i++] = (y + 0) * hPointCount + (x + 1)
-  //       }
-  //     }
-  //   }
-
-  //   return new THREE.Uint16BufferAttribute(buffer, 1)
-  // }, [hPointCount, vPointCount])
-
-  // const {
-  //   left: outLeft,
-  //   top: outTop,
-  //   width: outWidth,
-  //   height: outHeight,
-  // } = sampler.out
-
-  // return (
-  //   <mesh
-  //     position={[
-  //       -viewPort.width / 2 + outLeft + outWidth / 2,
-  //       viewPort.height / 2 - (outTop + outHeight / 2),
-  //       0.0,
-  //     ]}
-  //   >
-  //     <bufferGeometry
-  //       attach="geometry"
-  //       index={indexBufferAttribute}
-  //       attributes={{
-  //         position: positionBufferAttribute,
-  //         normal: normalBufferAttribute,
-  //         uv: uvAttribute,
-  //       }}
-  //     />
-  //     <meshBasicMaterial attach="material" map={texture} />
-  //   </mesh>
-  // )
+  }, [localRenderPoints, setRenderPoints])
 
   const containerRef = useRef<HTMLDivElement | null>(null)
 

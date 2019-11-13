@@ -1,17 +1,15 @@
-import React, { useMemo } from 'react'
+import React, { useEffect, useMemo } from 'react'
 import * as THREE from 'three'
-import { Point, Region, Sampler } from './common'
+import { Point, Sampler } from './common'
 
 export interface MeshNodeProps {
   texture: THREE.Texture
-  viewPort: Region
   sampler: Sampler
   renderPoints: Point[]
 }
 
 export const MeshNode: React.FC<MeshNodeProps> = ({
   texture,
-  viewPort,
   sampler,
   renderPoints,
 }) => {
@@ -44,9 +42,9 @@ export const MeshNode: React.FC<MeshNodeProps> = ({
       positionBuffer[i++] = 0
     }
     return new THREE.Float32BufferAttribute(positionBuffer, 3)
-  }, [renderPoints, positionBuffer])
+  }, [renderPoints, positionBuffer, sampler.out.width, sampler.out.height])
 
-  const uvAttribute = useMemo(() => {
+  const uvBufferAttribute = useMemo(() => {
     const buffer = new Float32Array((xPointCount + 1) * (yPointCount + 1) * 2)
     for (let y = 0; y < yPointCount + 1; y++) {
       for (let x = 0; x < xPointCount + 1; x++) {
@@ -74,26 +72,27 @@ export const MeshNode: React.FC<MeshNodeProps> = ({
   const indexBufferAttribute = useMemo(() => {
     const buffer = new Uint16Array(xPointCount * yPointCount * 6)
     let i = 0
-    for (let y = 0; y < yPointCount + 1; y++) {
-      for (let x = 0; x < xPointCount + 1; x++) {
-        if (x < xPointCount && y < yPointCount) {
-          buffer[i++] = (y + 0) * (xPointCount + 1) + (x + 0)
-          buffer[i++] = (y + 1) * (xPointCount + 1) + (x + 0)
-          buffer[i++] = (y + 1) * (xPointCount + 1) + (x + 1)
+    for (let y = 0; y < yPointCount; y++) {
+      for (let x = 0; x < xPointCount; x++) {
+        buffer[i++] = (y + 0) * (xPointCount + 1) + (x + 0)
+        buffer[i++] = (y + 1) * (xPointCount + 1) + (x + 0)
+        buffer[i++] = (y + 1) * (xPointCount + 1) + (x + 1)
 
-          buffer[i++] = (y + 0) * (xPointCount + 1) + (x + 0)
-          buffer[i++] = (y + 1) * (xPointCount + 1) + (x + 1)
-          buffer[i++] = (y + 0) * (xPointCount + 1) + (x + 1)
-        }
+        buffer[i++] = (y + 0) * (xPointCount + 1) + (x + 0)
+        buffer[i++] = (y + 1) * (xPointCount + 1) + (x + 1)
+        buffer[i++] = (y + 0) * (xPointCount + 1) + (x + 1)
       }
     }
 
     return new THREE.Uint16BufferAttribute(buffer, 1)
   }, [xPointCount, yPointCount])
 
-  console.log('indexBufferAttribute', indexBufferAttribute)
-  console.log('positionBufferAttribute', positionBufferAttribute)
-  console.log('uvAttribute', uvAttribute)
+  useEffect(() => {}, [
+    positionBufferAttribute,
+    uvBufferAttribute,
+    normalBufferAttribute,
+    indexBufferAttribute,
+  ])
 
   return (
     <group scale={[1, -1, 1]}>
@@ -104,7 +103,7 @@ export const MeshNode: React.FC<MeshNodeProps> = ({
           attributes={{
             position: positionBufferAttribute,
             normal: normalBufferAttribute,
-            uv: uvAttribute,
+            uv: uvBufferAttribute,
           }}
         />
         <meshBasicMaterial
