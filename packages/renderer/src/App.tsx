@@ -1,7 +1,6 @@
 import './App.css'
 
 import { IpcRendererEvent } from 'electron'
-import {} from 'ramda'
 import update from 'ramda/es/update'
 import React, { DependencyList, useEffect, useState } from 'react'
 import { Canvas } from 'react-three-fiber'
@@ -24,10 +23,13 @@ export type AsyncState =
 function toAsync(
   cb: EffectAyncCallback,
 ): Promise<void | (() => Resolvable<void | undefined>)> {
-  return new Promise((resolve, reject) => {
-    return Promise.resolve(cb())
-      .then(resolve)
-      .catch(reject)
+  return new Promise(async (resolve, reject) => {
+    try {
+      const value = await cb()
+      return resolve(value)
+    } catch (reason) {
+      return reject(reason)
+    }
   })
 }
 
@@ -75,27 +77,27 @@ export function useEffectAsync(
 const App: React.FC = () => {
   const [sceneProps, setSceneProps] = useState<SceneProps>({
     videoUrl: './BBB.mp4',
-    viewPort: { left: 0, top: 0, width: 1280, height: 720 },
+    viewPort: { left: 0, top: 0, width: 1920, height: 1080 },
     samplers: [
       {
         in: {
           left: 0,
           top: 0,
-          width: 5376,
-          height: 192,
+          width: 1280,
+          height: 720,
         },
         out: {
           left: 0,
           top: 0,
-          width: 1280,
-          height: 720,
+          width: 1920,
+          height: 1080,
         },
         config: {
           type: 'bilinear',
           linear: true,
           resolution: 16,
-          controlsX: 1,
-          controlsY: 1,
+          controlsX: 2,
+          controlsY: 2,
         },
       },
     ],
@@ -155,43 +157,42 @@ const App: React.FC = () => {
   )
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-      <div
+    <div
+      style={{
+        position: 'relative',
+        left: sceneProps.viewPort.left,
+        top: sceneProps.viewPort.top,
+        width: sceneProps.viewPort.width,
+        height: sceneProps.viewPort.height,
+      }}
+    >
+      <Canvas
+        invalidateFrameloop={false}
         style={{
           position: 'absolute',
-          top: 0,
           left: 0,
+          top: 0,
           width: '100%',
           height: '100%',
         }}
+        orthographic={true}
       >
-        <Canvas
-          invalidateFrameloop={false}
-          style={{
-            left: sceneProps.viewPort.left,
-            top: sceneProps.viewPort.top,
-            width: sceneProps.viewPort.width,
-            height: sceneProps.viewPort.height,
+        <Scene
+          {...{
+            ...sceneProps,
+            samplers: sceneProps.samplers.map((sampler, index) => ({
+              ...sampler,
+              renderPoints:
+                index < renderPoints.length ? renderPoints[index] : undefined,
+            })),
           }}
-          orthographic={true}
-        >
-          <Scene
-            {...{
-              ...sceneProps,
-              samplers: sceneProps.samplers.map((sampler, index) => ({
-                ...sampler,
-                renderPoints:
-                  index < renderPoints.length ? renderPoints[index] : undefined,
-              })),
-            }}
-          ></Scene>
-        </Canvas>
-      </div>
+        ></Scene>
+      </Canvas>
       <div
         style={{
           position: 'absolute',
-          top: 0,
           left: 0,
+          top: 0,
           width: '100%',
           height: '100%',
         }}

@@ -1,8 +1,6 @@
-import { flatbuffers } from 'flatbuffers'
-import React, { useEffect, useMemo } from 'react'
+import React, { useMemo } from 'react'
 import * as THREE from 'three'
 import { Point, Sampler } from './common'
-import { Renderer } from './schema_generated'
 
 export interface MeshNodeProps {
   texture: THREE.Texture

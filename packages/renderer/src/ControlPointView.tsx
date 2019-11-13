@@ -3,9 +3,9 @@ import { useDrag } from 'react-dnd'
 import { nextId, Point } from './common'
 
 export interface ControlPointProps {
-  containerRef: MutableRefObject<HTMLDivElement | null>
+  containerRef: MutableRefObject<SVGSVGElement | null>
   point: Point
-  setPoint: (point: Point) => void
+  setPoint?: (point: Point) => void
   draggable: boolean
   className: string
   radius: number
@@ -28,7 +28,7 @@ export const ControlPoint: React.FC<ControlPointProps> = React.memo(
     })
 
     useEffect(() => {
-      if (!draggable || !isDragging || !coord) {
+      if (!draggable || !isDragging || !coord || !setPoint) {
         return
       }
       const containerElement = containerRef.current
@@ -54,9 +54,8 @@ export const ControlPoint: React.FC<ControlPointProps> = React.memo(
         key={id}
         ref={dragRef}
         className={className}
-        transform={`translate(${point.x} ${point.y})`}
-        cx={0}
-        cy={0}
+        cx={point.x}
+        cy={point.y}
         r={radius}
       ></circle>
     )

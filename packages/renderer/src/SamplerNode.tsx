@@ -180,93 +180,85 @@ export const EditSamplerView: React.FC<SamplerNodeProps> = ({
     setRenderPoints(localRenderPoints)
   }, [localRenderPoints])
 
-  const containerRef = useRef<HTMLDivElement | null>(null)
+  const containerRef = useRef<SVGSVGElement | null>(null)
 
   return (
     <DndProvider backend={MouseBackEnd}>
-      <div
-        ref={containerRef}
+      <svg
         style={{
-          position: 'relative',
-          width: '100%',
-          height: '100%',
-          overflow: 'hidden',
+          left: sampler.out.left,
+          top: sampler.out.top,
+          width: sampler.out.width,
+          height: sampler.out.height,
+          backgroundColor: 'rgba(0, 0, 0, 0.2)',
         }}
+        ref={containerRef}
       >
-        <svg
-          style={{
-            left: sampler.out.left,
-            top: sampler.out.top,
-            width: sampler.out.width,
-            height: sampler.out.height,
-            backgroundColor: 'rgba(0, 0, 0, 0.2)',
-          }}
-        >
-          <g>
-            {Array.from({ length: sampler.config.controlsY + 2 }).flatMap(
-              (_, y) => {
-                return Array.from({
-                  length: sampler.config.controlsX + 2,
-                }).flatMap((_, x) => {
-                  const sourcePoint = getControlPointAt(
-                    sampler,
-                    controlPoints,
-                    x,
-                    y,
-                  )
-                  const targetPoint1 = getControlPointAt(
-                    sampler,
-                    controlPoints,
-                    x + 1,
-                    y,
-                  )
-                  const targetPoint2 = getControlPointAt(
-                    sampler,
-                    controlPoints,
-                    x,
-                    y + 1,
-                  )
-                  if (!sourcePoint) {
-                    return []
-                  }
+        <g>
+          {Array.from({ length: sampler.config.controlsY + 2 }).flatMap(
+            (_, y) => {
+              return Array.from({
+                length: sampler.config.controlsX + 2,
+              }).flatMap((_, x) => {
+                const sourcePoint = getControlPointAt(
+                  sampler,
+                  controlPoints,
+                  x,
+                  y,
+                )
+                const targetPoint1 = getControlPointAt(
+                  sampler,
+                  controlPoints,
+                  x + 1,
+                  y,
+                )
+                const targetPoint2 = getControlPointAt(
+                  sampler,
+                  controlPoints,
+                  x,
+                  y + 1,
+                )
+                if (!sourcePoint) {
+                  return []
+                }
 
-                  let lines: ReactElement[] = []
-                  if (targetPoint1) {
-                    lines = [
-                      ...lines,
-                      <line
-                        key={`line_1_${x}_${y}`}
-                        stroke="rgba(255, 255, 255, 0.5)"
-                        strokeWidth={2}
-                        x1={sourcePoint.x * sampler.out.width}
-                        y1={sourcePoint.y * sampler.out.height}
-                        x2={targetPoint1.x * sampler.out.width}
-                        y2={targetPoint1.y * sampler.out.height}
-                      ></line>,
-                    ]
-                  }
+                let lines: ReactElement[] = []
+                if (targetPoint1) {
+                  lines = [
+                    ...lines,
+                    <line
+                      key={`line_1_${x}_${y}`}
+                      stroke="rgba(255, 255, 255, 0.5)"
+                      strokeWidth={2}
+                      x1={sourcePoint.x * sampler.out.width}
+                      y1={sourcePoint.y * sampler.out.height}
+                      x2={targetPoint1.x * sampler.out.width}
+                      y2={targetPoint1.y * sampler.out.height}
+                    ></line>,
+                  ]
+                }
 
-                  if (targetPoint2) {
-                    lines = [
-                      ...lines,
-                      <line
-                        key={`line_2_${x}_${y}`}
-                        stroke="rgba(255, 255, 255, 0.5)"
-                        strokeWidth={2}
-                        x1={sourcePoint.x * sampler.out.width}
-                        y1={sourcePoint.y * sampler.out.height}
-                        x2={targetPoint2.x * sampler.out.width}
-                        y2={targetPoint2.y * sampler.out.height}
-                      ></line>,
-                    ]
-                  }
+                if (targetPoint2) {
+                  lines = [
+                    ...lines,
+                    <line
+                      key={`line_2_${x}_${y}`}
+                      stroke="rgba(255, 255, 255, 0.5)"
+                      strokeWidth={2}
+                      x1={sourcePoint.x * sampler.out.width}
+                      y1={sourcePoint.y * sampler.out.height}
+                      x2={targetPoint2.x * sampler.out.width}
+                      y2={targetPoint2.y * sampler.out.height}
+                    ></line>,
+                  ]
+                }
 
-                  return lines
-                })
-              },
-            )}
-          </g>
-          {/* <g>
+                return lines
+              })
+            },
+          )}
+        </g>
+        {/* <g>
             {localRenderPoints.map((point, index) => {
               return (
                 <ControlPoint
@@ -284,37 +276,36 @@ export const EditSamplerView: React.FC<SamplerNodeProps> = ({
               )
             })}
           </g> */}
-          <g>
-            {controlPoints.map((controlPoint, index) => {
-              return (
-                <ControlPoint
-                  key={`controlPoint_${index}`}
-                  point={{
-                    x: controlPoint.x * sampler.out.width,
-                    y: controlPoint.y * sampler.out.height,
-                  }}
-                  setPoint={point =>
-                    setControlPoints(
-                      update(
-                        index,
-                        {
-                          x: point.x / sampler.out.width,
-                          y: point.y / sampler.out.height,
-                        },
-                        controlPoints,
-                      ),
-                    )
-                  }
-                  containerRef={containerRef}
-                  draggable={true}
-                  className="controlPoint"
-                  radius={8}
-                />
-              )
-            })}
-          </g>
-        </svg>
-      </div>
+        <g>
+          {controlPoints.map((controlPoint, index) => {
+            return (
+              <ControlPoint
+                key={`controlPoint_${index}`}
+                point={{
+                  x: controlPoint.x * sampler.out.width,
+                  y: controlPoint.y * sampler.out.height,
+                }}
+                setPoint={point =>
+                  setControlPoints(
+                    update(
+                      index,
+                      {
+                        x: point.x / sampler.out.width,
+                        y: point.y / sampler.out.height,
+                      },
+                      controlPoints,
+                    ),
+                  )
+                }
+                containerRef={containerRef}
+                draggable={true}
+                className="controlPoint"
+                radius={32}
+              />
+            )
+          })}
+        </g>
+      </svg>
     </DndProvider>
   )
 }
