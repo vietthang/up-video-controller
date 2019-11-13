@@ -1,23 +1,8 @@
-import React, { useMemo } from 'react'
+import React, { useEffect, useMemo } from 'react'
+import { useCanvas, useThree } from 'react-three-fiber'
 import * as THREE from 'three'
-
-export interface Region {
-  left: number
-  top: number
-  width: number
-  height: number
-}
-
-export interface Sampler {
-  in: Region
-  out: Region
-}
-
-export interface SceneProps {
-  videoUrl?: string
-  viewPort: Region
-  samplers: Sampler[]
-}
+import { Point, Region, Sampler } from './common'
+import { MeshNode } from './MeshNode'
 
 export interface UseVideoState {
   loading: boolean
@@ -60,6 +45,16 @@ export function useVideoTexture(
   return { ...state, texture }
 }
 
+export interface SamplerWithRenderPoints extends Sampler {
+  renderPoints?: Point[]
+}
+
+export interface SceneProps {
+  videoUrl?: string
+  viewPort: Region
+  samplers: SamplerWithRenderPoints[]
+}
+
 export const Scene: React.FunctionComponent<SceneProps> = ({
   videoUrl,
   viewPort,
@@ -69,14 +64,36 @@ export const Scene: React.FunctionComponent<SceneProps> = ({
     videoUrl,
   )
 
-  if (loading) {
+  // const { setDefaultCamera } = useThree()
+
+  // useEffect(() => {
+  //   const camera = new THREE.OrthographicCamera(0, 1, 0, 1, 1, 1000)
+  //   camera.position.z = 75
+  //   setDefaultCamera(camera)
+  // }, [setDefaultCamera])
+
+  if (loading || !texture) {
     // TODO maybe display loading or something?
     return <></>
   }
 
   return (
     <>
-      {samplers.map((sampler, index) => {
+      {samplers.map(sampler => {
+        if (!sampler.renderPoints) {
+          return <></>
+        }
+        return (
+          <MeshNode
+            texture={texture}
+            viewPort={viewPort}
+            sampler={sampler}
+            renderPoints={sampler.renderPoints}
+          ></MeshNode>
+        )
+      })}
+
+      {/* {samplers.map((sampler, index) => {
         const {
           left: inLeft,
           top: inTop,
@@ -168,7 +185,7 @@ export const Scene: React.FunctionComponent<SceneProps> = ({
             <meshBasicMaterial attach="material" map={texture} />
           </mesh>
         )
-      })}
+      })} */}
     </>
   )
 }

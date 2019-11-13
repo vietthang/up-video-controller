@@ -1,9 +1,14 @@
+import './App.css'
+
 import { IpcRendererEvent } from 'electron'
+import {} from 'ramda'
+import update from 'ramda/es/update'
 import React, { DependencyList, useEffect, useState } from 'react'
 import { Canvas } from 'react-three-fiber'
 import { StringParam, useQueryParam } from 'use-query-params'
-import './App.css'
-import { Scene, SceneProps } from './Scene'
+import { Point, SceneProps } from './common'
+import { EditSamplerView } from './SamplerNode'
+import { Scene } from './Scene'
 
 type Resolvable<T> = T | Promise<T>
 
@@ -16,9 +21,19 @@ export type AsyncState =
   | { state: 'finished' }
   | { state: 'error'; error: any }
 
+function toAsync(
+  cb: EffectAyncCallback,
+): Promise<void | (() => Resolvable<void | undefined>)> {
+  return new Promise((resolve, reject) => {
+    return Promise.resolve(cb())
+      .then(resolve)
+      .catch(reject)
+  })
+}
+
 export function useEffectAsync(
   callback: EffectAyncCallback,
-  deps?: DependencyList,
+  deps: DependencyList = [],
 ): AsyncState {
   const [effectState, setEffectState] = useState<AsyncState>({
     state: 'pending',
@@ -28,7 +43,7 @@ export function useEffectAsync(
     let active = true
     let unmountCallback: (() => Resolvable<void | undefined>) | undefined
 
-    Promise.resolve(callback())
+    Promise.resolve(toAsync(callback))
       .then(ret => {
         setEffectState({ state: 'finished' })
 
@@ -52,23 +67,36 @@ export function useEffectAsync(
         )
       }
     }
-  }, deps)
+  }, [...deps])
 
   return effectState
 }
 
 const App: React.FC = () => {
   const [sceneProps, setSceneProps] = useState<SceneProps>({
-    videoUrl: './FILAMENT_WORK_SLOW_01.mp4',
+    videoUrl: './BBB.mp4',
     viewPort: { left: 0, top: 0, width: 1280, height: 720 },
     samplers: [
       {
-        in: { left: 0, top: 0, width: 5376 / 2, height: 192 },
-        out: { left: 0, top: 0, width: 360, height: 192 },
-      },
-      {
-        in: { left: 5376 / 2, top: 0, width: 5376 / 2, height: 192 },
-        out: { left: 640, top: 0, width: 360, height: 192 },
+        in: {
+          left: 0,
+          top: 0,
+          width: 5376,
+          height: 192,
+        },
+        out: {
+          left: 0,
+          top: 0,
+          width: 1280,
+          height: 720,
+        },
+        config: {
+          type: 'bilinear',
+          linear: true,
+          resolution: 16,
+          controlsX: 1,
+          controlsY: 1,
+        },
       },
     ],
   })
@@ -87,7 +115,7 @@ const App: React.FC = () => {
     }
   }, [q])
 
-  useEffect(() => {
+  useEffectAsync(() => {
     const { ipcRenderer }: typeof import('electron') = window.require(
       'electron',
     )
@@ -104,6 +132,14 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const windowMessageHandler = (evt: MessageEvent) => {
+      if (!evt.data.payload) {
+        return
+      }
+
+      if (evt.data.type !== 'updateScene') {
+        return
+      }
+
       setSceneProps(evt.data.payload)
     }
 
@@ -114,17 +150,62 @@ const App: React.FC = () => {
     }
   })
 
+  const [renderPoints, setRenderPoints] = useState<Point[][]>(
+    sceneProps.samplers.map(() => []),
+  )
+
   return (
-    <Canvas
-      invalidateFrameloop={false}
-      style={{
-        width: '100%',
-        height: '100%',
-      }}
-      orthographic={true}
-    >
-      <Scene {...sceneProps}></Scene>
-    </Canvas>
+    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+        }}
+      >
+        <Canvas
+          invalidateFrameloop={false}
+          style={{
+            left: sceneProps.viewPort.left,
+            top: sceneProps.viewPort.top,
+            width: sceneProps.viewPort.width,
+            height: sceneProps.viewPort.height,
+          }}
+          orthographic={true}
+        >
+          <Scene
+            {...{
+              ...sceneProps,
+              samplers: sceneProps.samplers.map((sampler, index) => ({
+                ...sampler,
+                renderPoints:
+                  index < renderPoints.length ? renderPoints[index] : undefined,
+              })),
+            }}
+          ></Scene>
+        </Canvas>
+      </div>
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+        }}
+      >
+        {sceneProps.samplers.map((sampler, index) => (
+          <EditSamplerView
+            sampler={sampler}
+            setRenderPoints={points =>
+              setRenderPoints(update(index, points, renderPoints))
+            }
+          ></EditSamplerView>
+        ))}
+      </div>
+    </div>
   )
 }
 

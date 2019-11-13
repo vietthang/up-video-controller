@@ -1,0 +1,16 @@
+/* svg:hover {
+  animation: ripple 1s infinite;
+} */
+
+svg circle.controlPoint {
+  fill: rgba(255, 255, 255, 0.5);
+  transition: fill 0.2s ease-in-out;
+}
+
+svg circle.controlPoint:hover {
+  fill: rgba(255, 255, 255, 0.8);
+}
+
+svg circle.renderPoint {
+  fill: green;
+}
