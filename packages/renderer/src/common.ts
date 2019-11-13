@@ -98,8 +98,10 @@ export function tricubicInterpolate(
 export type Point4 = [Point, Point, Point, Point]
 
 export function cubicInterpolatePoint(p: Point4, x: number): Point {
+  const px: Float4 = [p[0].x, p[1].x, p[2].x, p[3].x]
+  const py: Float4 = [p[0].y, p[1].y, p[2].y, p[3].y]
   return {
-    x: cubicInterpolate(p.map(p => p.x) as Float4, x),
-    y: cubicInterpolate(p.map(p => p.y) as Float4, x),
+    x: cubicInterpolate(px, x),
+    y: cubicInterpolate(py, x),
   }
 }

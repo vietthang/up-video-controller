@@ -130,39 +130,39 @@ export const EditSamplerView: React.FC<SamplerNodeProps> = ({
   }, [sampler.config.controlsX, sampler.config.controlsY])
 
   useEffect(() => {
-    const renderPoints = Array.from({ length: yPointCount + 1 }).flatMap(
-      (_, y) => {
-        return Array.from({
-          length: xPointCount + 1,
-        }).flatMap((_, x) => {
-          const cx = (x / xPointCount) * (sampler.config.controlsX + 1)
-          const cy = (y / yPointCount) * (sampler.config.controlsY + 1)
-
-          const controlX = Math.floor(cx)
-          const u = cx - controlX
-          const controlY = Math.floor(cy)
-          const v = cy - controlY
-
-          const rows: Point[] = []
-          for (let i = -1; i < 3; ++i) {
-            const cols: Point[] = []
-            for (let j = -1; j < 3; ++j) {
-              cols.push(
-                getControlPointAtExtrapolate(
-                  sampler,
-                  controlPoints,
-                  controlX + i,
-                  controlY + j,
-                ),
-              )
-            }
-            rows.push(cubicInterpolatePoint(cols as Point4, v))
-          }
-
-          return cubicInterpolatePoint(rows as Point4, u)
-        })
-      },
+    const renderPoints: Point[] = new Array(
+      (yPointCount + 1) * (xPointCount + 1),
     )
+    let i = 0
+    for (let y = 0; y < yPointCount + 1; y++) {
+      for (let x = 0; x < xPointCount + 1; x++) {
+        const cx = (x / xPointCount) * (sampler.config.controlsX + 1)
+        const cy = (y / yPointCount) * (sampler.config.controlsY + 1)
+
+        const controlX = Math.floor(cx)
+        const u = cx - controlX
+        const controlY = Math.floor(cy)
+        const v = cy - controlY
+
+        const rows: Point[] = []
+        for (let i = -1; i < 3; ++i) {
+          const cols: Point[] = []
+          for (let j = -1; j < 3; ++j) {
+            cols.push(
+              getControlPointAtExtrapolate(
+                sampler,
+                controlPoints,
+                controlX + i,
+                controlY + j,
+              ),
+            )
+          }
+          rows.push(cubicInterpolatePoint(cols as Point4, v))
+        }
+
+        renderPoints[i++] = cubicInterpolatePoint(rows as Point4, u)
+      }
+    }
 
     setLocalRenderPoints(renderPoints)
   }, [
@@ -178,7 +178,7 @@ export const EditSamplerView: React.FC<SamplerNodeProps> = ({
 
   useEffect(() => {
     setRenderPoints(localRenderPoints)
-  }, [localRenderPoints, setRenderPoints])
+  }, [localRenderPoints])
 
   const containerRef = useRef<HTMLDivElement | null>(null)
 

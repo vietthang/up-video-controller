@@ -1,6 +1,8 @@
+import { flatbuffers } from 'flatbuffers'
 import React, { useEffect, useMemo } from 'react'
 import * as THREE from 'three'
 import { Point, Sampler } from './common'
+import { Renderer } from './schema_generated'
 
 export interface MeshNodeProps {
   texture: THREE.Texture
@@ -87,12 +89,24 @@ export const MeshNode: React.FC<MeshNodeProps> = ({
     return new THREE.Uint16BufferAttribute(buffer, 1)
   }, [xPointCount, yPointCount])
 
-  useEffect(() => {}, [
-    positionBufferAttribute,
-    uvBufferAttribute,
-    normalBufferAttribute,
-    indexBufferAttribute,
-  ])
+  // useEffect(() => {
+  //   const builder = new flatbuffers.Builder()
+  //   Renderer.RendererConstruct.startRendererConstruct(builder)
+  //   Renderer.RendererConstruct.addIndexCount(
+  //     builder,
+  //     xPointCount * yPointCount * 6,
+  //   )
+  //   Renderer.RendererConstruct.addVertexCount(builder, renderPoints.length)
+  //   flatbuffers
+  //   Renderer.RendererConstruct.addPositionBuffer(builder, renderPoints.length)
+  //   Renderer.RendererConstruct.addVertexCount(builder, renderPoints.length)
+  // }, [
+  //   renderPoints.length,
+  //   positionBufferAttribute,
+  //   uvBufferAttribute,
+  //   normalBufferAttribute,
+  //   indexBufferAttribute,
+  // ])
 
   return (
     <group scale={[1, -1, 1]}>

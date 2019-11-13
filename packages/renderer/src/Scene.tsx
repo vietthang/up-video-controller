@@ -69,12 +69,13 @@ export const Scene: React.FunctionComponent<SceneProps> = ({
 
   return (
     <>
-      {samplers.map(sampler => {
+      {samplers.map((sampler, index) => {
         if (!sampler.renderPoints) {
           return <></>
         }
         return (
           <MeshNode
+            key={index.toString()}
             texture={texture}
             sampler={sampler}
             renderPoints={sampler.renderPoints}

@@ -1,4 +1,4 @@
-import React, { MutableRefObject, useEffect, useMemo, useState } from 'react'
+import React, { MutableRefObject, useEffect, useMemo } from 'react'
 import { useDrag } from 'react-dnd'
 import { nextId, Point } from './common'
 
@@ -46,6 +46,7 @@ export const ControlPoint: React.FC<ControlPointProps> = React.memo(
       coord ? coord.x : null,
       coord ? coord.y : null,
       containerRef,
+      // setPoint,
     ])
 
     return (
