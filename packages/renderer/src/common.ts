@@ -42,15 +42,23 @@ export interface Sampler {
   config: SamplerConfig
 }
 
+export interface SamplerState {
+  sampler: Sampler
+  showControlPoints: boolean
+  showRenderPoints: boolean
+  controlPoints: Point[]
+  renderPoints: Point[]
+}
+
 export interface Display {
   id: string
   viewPort: Region
 }
 
-export interface SceneProps {
+export interface SceneState {
   videoUrl?: string
   viewPort: Region
-  samplers: Sampler[]
+  samplers: SamplerState[]
 }
 
 let current = 0

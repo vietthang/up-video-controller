@@ -1,11 +1,11 @@
 import './App.css'
 
 import { IpcRendererEvent } from 'electron'
-import update from 'ramda/es/update'
+import { lensPath, set } from 'ramda'
 import React, { DependencyList, useEffect, useState } from 'react'
 import { Canvas } from 'react-three-fiber'
 import { StringParam, useQueryParam } from 'use-query-params'
-import { Point, SceneProps } from './common'
+import { generateControlPoints, SceneState } from './common'
 import { EditSamplerView } from './SamplerNode'
 import { Scene } from './Scene'
 
@@ -75,30 +75,36 @@ export function useEffectAsync(
 }
 
 const App: React.FC = () => {
-  const [sceneProps, setSceneProps] = useState<SceneProps>({
+  const [sceneState, setSceneState] = useState<SceneState>({
     videoUrl: './BBB.mp4',
-    viewPort: { left: 0, top: 0, width: 1920, height: 1080 },
+    viewPort: { left: 0, top: 0, width: 1280, height: 720 },
     samplers: [
       {
-        in: {
-          left: 0,
-          top: 0,
-          width: 1280,
-          height: 720,
+        sampler: {
+          in: {
+            left: 0,
+            top: 0,
+            width: 640,
+            height: 720,
+          },
+          out: {
+            left: 0,
+            top: 0,
+            width: 1280,
+            height: 720,
+          },
+          config: {
+            type: 'bilinear',
+            linear: true,
+            resolution: 16,
+            controlsX: 2,
+            controlsY: 2,
+          },
         },
-        out: {
-          left: 0,
-          top: 0,
-          width: 1920,
-          height: 1080,
-        },
-        config: {
-          type: 'bilinear',
-          linear: true,
-          resolution: 16,
-          controlsX: 2,
-          controlsY: 2,
-        },
+        showControlPoints: false,
+        showRenderPoints: false,
+        controlPoints: generateControlPoints(2, 2),
+        renderPoints: [],
       },
     ],
   })
@@ -111,7 +117,7 @@ const App: React.FC = () => {
     }
     try {
       const props = JSON.parse(q)
-      setSceneProps(props)
+      setSceneState(props)
     } catch {
       // no need to do anything
     }
@@ -123,7 +129,7 @@ const App: React.FC = () => {
     )
 
     const ipcEventHandler = (evt: IpcRendererEvent, message: any) => {
-      setSceneProps(message)
+      setSceneState(message)
     }
 
     ipcRenderer.on('updateScene', ipcEventHandler)
@@ -142,7 +148,7 @@ const App: React.FC = () => {
         return
       }
 
-      setSceneProps(evt.data.payload)
+      setSceneState(evt.data.payload)
     }
 
     window.addEventListener('message', windowMessageHandler)
@@ -152,18 +158,94 @@ const App: React.FC = () => {
     }
   })
 
-  const [renderPoints, setRenderPoints] = useState<Point[][]>(
-    sceneProps.samplers.map(() => []),
-  )
+  useEffectAsync(() => {
+    const saveFile = async () => {
+      const { dialog }: typeof import('electron').remote = window.require(
+        'electron',
+      ).remote
+      const fs: typeof import('fs').promises = window.require('fs').promises
+
+      const { filePath } = await dialog.showSaveDialog({ title: 'Save config' })
+      if (!filePath) {
+        return
+      }
+      await fs.writeFile(filePath, JSON.stringify(sceneState))
+    }
+
+    const loadFile = async () => {
+      const { dialog }: typeof import('electron').remote = window.require(
+        'electron',
+      ).remote
+      const fs: typeof import('fs').promises = window.require('fs').promises
+
+      const { filePaths } = await dialog.showOpenDialog({
+        title: 'Load config',
+      })
+      if (!filePaths.length) {
+        return
+      }
+      // TODO validate config
+      setSceneState(JSON.parse(await fs.readFile(filePaths[0], 'utf8')))
+    }
+
+    const toggleShowControlPoints = async () => {
+      const updatedState = sceneState.samplers.reduce(
+        (prev, sampler, index) => {
+          return set(
+            lensPath(['samplers', index, 'showControlPoints']),
+            !sampler.showControlPoints,
+            prev,
+          )
+        },
+        sceneState,
+      )
+
+      setSceneState(updatedState)
+    }
+
+    const toggleShowRenderPoints = async () => {
+      const updatedState = sceneState.samplers.reduce(
+        (prev, sampler, index) => {
+          return set(
+            lensPath(['samplers', index, 'showRenderPoints']),
+            !sampler.showRenderPoints,
+            prev,
+          )
+        },
+        sceneState,
+      )
+
+      setSceneState(updatedState)
+    }
+
+    const handler = (evt: KeyboardEvent) => {
+      switch (evt.key) {
+        case 's':
+          return saveFile()
+        case 'l':
+          return loadFile()
+        case 'c':
+          return toggleShowControlPoints()
+        case 'r':
+          return toggleShowRenderPoints()
+        default:
+          return
+      }
+    }
+    window.addEventListener('keyup', handler)
+    return () => {
+      window.removeEventListener('keyup', handler)
+    }
+  }, [sceneState])
 
   return (
     <div
       style={{
         position: 'relative',
-        left: sceneProps.viewPort.left,
-        top: sceneProps.viewPort.top,
-        width: sceneProps.viewPort.width,
-        height: sceneProps.viewPort.height,
+        left: sceneState.viewPort.left,
+        top: sceneState.viewPort.top,
+        width: sceneState.viewPort.width,
+        height: sceneState.viewPort.height,
       }}
     >
       <Canvas
@@ -177,16 +259,7 @@ const App: React.FC = () => {
         }}
         orthographic={true}
       >
-        <Scene
-          {...{
-            ...sceneProps,
-            samplers: sceneProps.samplers.map((sampler, index) => ({
-              ...sampler,
-              renderPoints:
-                index < renderPoints.length ? renderPoints[index] : undefined,
-            })),
-          }}
-        ></Scene>
+        <Scene {...sceneState}></Scene>
       </Canvas>
       <div
         style={{
@@ -197,14 +270,44 @@ const App: React.FC = () => {
           height: '100%',
         }}
       >
-        {sceneProps.samplers.map((sampler, index) => (
-          <EditSamplerView
-            sampler={sampler}
-            setRenderPoints={points =>
-              setRenderPoints(update(index, points, renderPoints))
-            }
-          ></EditSamplerView>
-        ))}
+        {sceneState.samplers.map(
+          (
+            {
+              sampler,
+              controlPoints,
+              renderPoints,
+              showControlPoints,
+              showRenderPoints,
+            },
+            index,
+          ) => (
+            <EditSamplerView
+              sampler={sampler}
+              showControlPoints={showControlPoints}
+              showRenderPoints={showRenderPoints}
+              renderPoints={renderPoints}
+              setRenderPoints={points => {
+                setSceneState(
+                  set(
+                    lensPath(['samplers', index, 'renderPoints']),
+                    points,
+                    sceneState,
+                  ),
+                )
+              }}
+              controlPoints={controlPoints}
+              setControlPoints={points => {
+                setSceneState(
+                  set(
+                    lensPath(['samplers', index, 'controlPoints']),
+                    points,
+                    sceneState,
+                  ),
+                )
+              }}
+            ></EditSamplerView>
+          ),
+        )}
       </div>
     </div>
   )

@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react'
 import * as THREE from 'three'
-import { Point, Region, Sampler } from './common'
+import { Point, Region, Sampler, SceneState } from './common'
 import { MeshNode } from './MeshNode'
 
 export interface UseVideoState {
@@ -44,17 +44,7 @@ export function useVideoTexture(
   return { ...state, texture }
 }
 
-export interface SamplerWithRenderPoints extends Sampler {
-  renderPoints?: Point[]
-}
-
-export interface SceneProps {
-  videoUrl?: string
-  viewPort: Region
-  samplers: SamplerWithRenderPoints[]
-}
-
-export const Scene: React.FunctionComponent<SceneProps> = ({
+export const Scene: React.FunctionComponent<SceneState> = ({
   videoUrl,
   samplers,
 }) => {
@@ -69,16 +59,15 @@ export const Scene: React.FunctionComponent<SceneProps> = ({
 
   return (
     <>
-      {samplers.map((sampler, index) => {
-        if (!sampler.renderPoints) {
-          return <></>
-        }
+      {samplers.map(({ sampler, renderPoints }, index) => {
         return (
           <MeshNode
             key={index.toString()}
             texture={texture}
             sampler={sampler}
-            renderPoints={sampler.renderPoints}
+            videoWidth={videoWidth}
+            videoHeight={videoHeight}
+            renderPoints={renderPoints}
           ></MeshNode>
         )
       })}

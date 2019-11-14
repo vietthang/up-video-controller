@@ -13,8 +13,6 @@ export interface ControlPointProps {
 
 export const ControlPoint: React.FC<ControlPointProps> = React.memo(
   ({ containerRef, point, setPoint, draggable, className, radius }) => {
-    const id = useMemo(() => nextId(), [])
-
     const [{ isDragging, coord }, dragRef] = useDrag({
       item: {
         type: 'Point',
@@ -50,14 +48,13 @@ export const ControlPoint: React.FC<ControlPointProps> = React.memo(
     ])
 
     return (
-      <circle
-        key={id}
-        ref={dragRef}
-        className={className}
-        cx={point.x}
-        cy={point.y}
-        r={radius}
-      ></circle>
+      <g
+        className="controlGroup"
+        transform={`translate(${point.x} ${point.y})`}
+      >
+        <circle key="render" className={className} r={4}></circle>
+        <circle key="control" ref={dragRef} r={64} opacity={0}></circle>
+      </g>
     )
   },
 )
