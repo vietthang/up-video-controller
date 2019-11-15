@@ -1,6 +1,6 @@
-import React, { MutableRefObject, useEffect, useMemo } from 'react'
+import React, { MutableRefObject, useEffect } from 'react'
 import { useDrag } from 'react-dnd'
-import { nextId, Point } from './common'
+import { Point } from './common'
 
 export interface ControlPointProps {
   containerRef: MutableRefObject<SVGSVGElement | null>
@@ -38,14 +38,7 @@ export const ControlPoint: React.FC<ControlPointProps> = React.memo(
         x: coord.x - boundingRect.left,
         y: coord.y - boundingRect.top,
       })
-    }, [
-      draggable,
-      isDragging,
-      coord ? coord.x : null,
-      coord ? coord.y : null,
-      containerRef,
-      // setPoint,
-    ])
+    }, [draggable, isDragging, coord, containerRef, setPoint])
 
     return (
       <g

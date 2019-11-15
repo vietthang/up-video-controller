@@ -1,11 +1,17 @@
 import './App.css'
 
 import { IpcRendererEvent } from 'electron'
-import { lensPath, set } from 'ramda'
-import React, { DependencyList, useEffect, useState } from 'react'
+import { lensPath, memoizeWith, set } from 'ramda'
+import React, {
+  DependencyList,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
 import { Canvas } from 'react-three-fiber'
 import { StringParam, useQueryParam } from 'use-query-params'
-import { generateControlPoints, SceneState } from './common'
+import { generateControlPoints, Point, SceneProps, SceneState } from './common'
 import { EditSamplerView } from './SamplerNode'
 import { Scene } from './Scene'
 
@@ -111,32 +117,51 @@ const App: React.FC = () => {
 
   const [q] = useQueryParam('config', StringParam)
 
+  const setSceneProps = useCallback(
+    (sceneProps: SceneProps) => {
+      setSceneState({
+        ...sceneProps,
+        samplers: sceneProps.samplers.map(sampler => ({
+          sampler,
+          controlPoints: generateControlPoints(
+            sampler.config.controlsX,
+            sampler.config.controlsY,
+          ),
+          renderPoints: [],
+          showControlPoints: false,
+          showRenderPoints: false,
+        })),
+      })
+    },
+    [setSceneState],
+  )
+
   useEffect(() => {
     if (!q) {
       return
     }
     try {
-      const props = JSON.parse(q)
-      setSceneState(props)
+      const props: SceneProps = JSON.parse(q)
+      setSceneProps(props)
     } catch {
       // no need to do anything
     }
-  }, [q])
+  }, [q, setSceneProps])
 
   useEffectAsync(() => {
     const { ipcRenderer }: typeof import('electron') = window.require(
       'electron',
     )
 
-    const ipcEventHandler = (evt: IpcRendererEvent, message: any) => {
-      setSceneState(message)
+    const ipcEventHandler = (evt: IpcRendererEvent, message: SceneProps) => {
+      setSceneProps(message)
     }
 
     ipcRenderer.on('updateScene', ipcEventHandler)
     return () => {
       ipcRenderer.off('updateScene', ipcEventHandler)
     }
-  })
+  }, [setSceneProps])
 
   useEffect(() => {
     const windowMessageHandler = (evt: MessageEvent) => {
@@ -148,7 +173,7 @@ const App: React.FC = () => {
         return
       }
 
-      setSceneState(evt.data.payload)
+      setSceneProps(evt.data.payload)
     }
 
     window.addEventListener('message', windowMessageHandler)
@@ -156,7 +181,7 @@ const App: React.FC = () => {
     return () => {
       window.removeEventListener('message', windowMessageHandler)
     }
-  })
+  }, [setSceneProps])
 
   useEffectAsync(() => {
     const saveFile = async () => {
@@ -169,7 +194,12 @@ const App: React.FC = () => {
       if (!filePath) {
         return
       }
-      await fs.writeFile(filePath, JSON.stringify(sceneState))
+
+      setSceneState(oldState => {
+        // TODO hack to get current state
+        fs.writeFile(filePath, JSON.stringify(oldState)).catch()
+        return oldState
+      })
     }
 
     const loadFile = async () => {
@@ -189,41 +219,35 @@ const App: React.FC = () => {
     }
 
     const toggleShowControlPoints = async () => {
-      const updatedState = sceneState.samplers.reduce(
-        (prev, sampler, index) => {
+      setSceneState(oldState =>
+        oldState.samplers.reduce((prev, sampler, index) => {
           return set(
             lensPath(['samplers', index, 'showControlPoints']),
             !sampler.showControlPoints,
             prev,
           )
-        },
-        sceneState,
+        }, oldState),
       )
-
-      setSceneState(updatedState)
     }
 
     const toggleShowRenderPoints = async () => {
-      const updatedState = sceneState.samplers.reduce(
-        (prev, sampler, index) => {
+      setSceneState(oldState =>
+        oldState.samplers.reduce((prev, sampler, index) => {
           return set(
             lensPath(['samplers', index, 'showRenderPoints']),
             !sampler.showRenderPoints,
             prev,
           )
-        },
-        sceneState,
+        }, oldState),
       )
-
-      setSceneState(updatedState)
     }
 
     const handler = (evt: KeyboardEvent) => {
       switch (evt.key) {
         case 's':
-          return saveFile()
+          return saveFile().catch()
         case 'l':
-          return loadFile()
+          return loadFile().catch()
         case 'c':
           return toggleShowControlPoints()
         case 'r':
@@ -236,7 +260,27 @@ const App: React.FC = () => {
     return () => {
       window.removeEventListener('keyup', handler)
     }
-  }, [sceneState])
+  }, [])
+
+  const setControlPointsCreator = useCallback(
+    (index: number) => (points: Point[]) => {
+      setSceneState(oldState =>
+        set(lensPath(['samplers', index, 'controlPoints']), points, oldState),
+      )
+    },
+    [setSceneState],
+  )
+
+  const setRenderPointsCreator = useMemo(() => {
+    return memoizeWith(
+      (index: number) => index.toString(),
+      (index: number) => (points: Point[]) => {
+        setSceneState(oldState =>
+          set(lensPath(['samplers', index, 'renderPoints']), points, oldState),
+        )
+      },
+    )
+  }, [setSceneState])
 
   return (
     <div
@@ -282,29 +326,14 @@ const App: React.FC = () => {
             index,
           ) => (
             <EditSamplerView
+              key={`EditSamplerView_${index}`}
               sampler={sampler}
               showControlPoints={showControlPoints}
               showRenderPoints={showRenderPoints}
               renderPoints={renderPoints}
-              setRenderPoints={points => {
-                setSceneState(
-                  set(
-                    lensPath(['samplers', index, 'renderPoints']),
-                    points,
-                    sceneState,
-                  ),
-                )
-              }}
+              setRenderPoints={setRenderPointsCreator(index)}
               controlPoints={controlPoints}
-              setControlPoints={points => {
-                setSceneState(
-                  set(
-                    lensPath(['samplers', index, 'controlPoints']),
-                    points,
-                    sceneState,
-                  ),
-                )
-              }}
+              setControlPoints={setControlPointsCreator(index)}
             ></EditSamplerView>
           ),
         )}

@@ -1,10 +1,10 @@
-import localforage from 'localforage'
 import React, { useMemo } from 'react'
 import * as THREE from 'three'
-import { Point, Sampler } from './common'
+import { Point, Region, Sampler } from './common'
 
 export interface MeshNodeProps {
   texture: THREE.Texture
+  viewPort: Region
   videoWidth: number
   videoHeight: number
   sampler: Sampler
@@ -13,17 +13,13 @@ export interface MeshNodeProps {
 
 export const MeshNode: React.FC<MeshNodeProps> = ({
   texture,
+  viewPort,
   sampler,
   videoWidth,
   videoHeight,
   renderPoints,
 }) => {
-  const {
-    left: outLeft,
-    top: outTop,
-    width: outWidth,
-    height: outHeight,
-  } = sampler.out
+  const { left: outLeft, top: outTop } = sampler.out
 
   const xPointCount = useMemo(
     () => Math.floor(sampler.out.width / sampler.config.resolution) + 1,
@@ -50,8 +46,8 @@ export const MeshNode: React.FC<MeshNodeProps> = ({
   }, [renderPoints, positionBuffer, sampler.out.width, sampler.out.height])
 
   const uvBuffer = useMemo(() => {
-    return new Float32Array((xPointCount + 1) * (yPointCount + 1) * 2)
-  }, [xPointCount, yPointCount])
+    return new Float32Array(renderPoints.length * 2)
+  }, [renderPoints.length])
 
   const uvBufferAttribute = useMemo(() => {
     for (let y = 0; y < yPointCount + 1; y++) {
@@ -99,7 +95,13 @@ export const MeshNode: React.FC<MeshNodeProps> = ({
 
   return (
     <group scale={[1, -1, 1]}>
-      <mesh position={[outLeft - outWidth / 2, outTop - outHeight / 2, 0.0]}>
+      <mesh
+        position={[
+          outLeft - viewPort.width / 2,
+          outTop - viewPort.height / 2,
+          0.0,
+        ]}
+      >
         <bufferGeometry
           attach="geometry"
           index={indexBufferAttribute}

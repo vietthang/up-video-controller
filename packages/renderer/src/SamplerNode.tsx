@@ -1,22 +1,10 @@
 import './SamplerNode.css'
 
 import { update } from 'ramda'
-import React, {
-  ReactElement,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import React, { ReactElement, useEffect, useMemo, useRef } from 'react'
 import { DndProvider } from 'react-dnd'
 import MouseBackEnd from 'react-dnd-mouse-backend'
-import {
-  cubicInterpolatePoint,
-  generateControlPoints,
-  Point,
-  Point4,
-  Sampler,
-} from './common'
+import { cubicInterpolatePoint, Point, Point4, Sampler } from './common'
 import { ControlPoint } from './ControlPointView'
 
 function getControlPointAt(
@@ -111,12 +99,11 @@ export const EditSamplerView: React.FC<SamplerNodeProps> = ({
   showControlPoints,
   showRenderPoints,
   sampler,
+  renderPoints,
   setRenderPoints,
   controlPoints,
   setControlPoints,
 }) => {
-  const [localRenderPoints, setLocalRenderPoints] = useState<Point[]>([])
-
   const xPointCount = useMemo(
     () => Math.floor(sampler.out.width / sampler.config.resolution) + 1,
     [sampler.out.width, sampler.config.resolution],
@@ -126,15 +113,6 @@ export const EditSamplerView: React.FC<SamplerNodeProps> = ({
     () => Math.floor(sampler.out.height / sampler.config.resolution) + 1,
     [sampler.out.height, sampler.config.resolution],
   )
-
-  useEffect(() => {
-    if (controlPoints) {
-      return
-    }
-    setControlPoints(
-      generateControlPoints(sampler.config.controlsX, sampler.config.controlsY),
-    )
-  }, [controlPoints, sampler.config.controlsX, sampler.config.controlsY])
 
   useEffect(() => {
     const renderPoints: Point[] = new Array(
@@ -171,8 +149,9 @@ export const EditSamplerView: React.FC<SamplerNodeProps> = ({
       }
     }
 
-    setLocalRenderPoints(renderPoints)
+    setRenderPoints(renderPoints)
   }, [
+    // sampler, // TODO
     sampler.out.width,
     sampler.out.height,
     sampler.config.resolution,
@@ -181,11 +160,8 @@ export const EditSamplerView: React.FC<SamplerNodeProps> = ({
     controlPoints,
     xPointCount,
     yPointCount,
+    setRenderPoints,
   ])
-
-  useEffect(() => {
-    setRenderPoints(localRenderPoints)
-  }, [localRenderPoints])
 
   const containerRef = useRef<SVGSVGElement | null>(null)
 
@@ -272,7 +248,7 @@ export const EditSamplerView: React.FC<SamplerNodeProps> = ({
         )}
         {showRenderPoints && (
           <g>
-            {localRenderPoints.map((point, index) => {
+            {renderPoints.map((point, index) => {
               return (
                 <ControlPoint
                   key={`renderPoint_${index}`}

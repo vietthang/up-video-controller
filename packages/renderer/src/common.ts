@@ -61,6 +61,12 @@ export interface SceneState {
   samplers: SamplerState[]
 }
 
+export interface SceneProps {
+  videoUrl?: string
+  viewPort: Region
+  samplers: Sampler[]
+}
+
 let current = 0
 
 export function nextId() {

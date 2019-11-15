@@ -6,10 +6,12 @@ function createWindow() {
   // Create the browser window.
   mainWindow = new BrowserWindow({
     height: 720,
-    width: 1280,
+    width: 960,
+    frame: false,
     webPreferences: {
       nodeIntegration: true,
       webSecurity: false,
+      nativeWindowOpen: true,
     },
   })
 
