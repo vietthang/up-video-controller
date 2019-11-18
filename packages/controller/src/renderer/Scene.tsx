@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import * as THREE from 'three'
 import { AppState } from '../state'
 import { MeshNode } from './MeshNode'
@@ -26,11 +26,10 @@ export function useVideoTexture(videoUrl?: string): UseVideoState {
     video.autoplay = true
     video.loop = true
 
-    setState(state => ({ ...state, texture: new THREE.Texture(video) }))
-
     const handler = () => {
       setState(state => ({
         ...state,
+        texture: new THREE.VideoTexture(video),
         loading: false,
         videoWidth: video.videoWidth,
         videoHeight: video.videoHeight,
@@ -47,98 +46,7 @@ export function useVideoTexture(videoUrl?: string): UseVideoState {
   return state
 }
 
-function createDemoMesh(
-  width: number,
-  height: number,
-  videoUrl: string,
-): THREE.Mesh {
-  const geometry = new THREE.BufferGeometry()
-  geometry.setIndex(new THREE.Uint16BufferAttribute([1, 0, 2, 0, 2, 3], 1))
-  geometry.setAttribute(
-    'position',
-    new THREE.Float32BufferAttribute(
-      [
-        // left-top
-        -width / 2,
-        -height / 2,
-        1,
-        // left-bottom
-        -width / 2,
-        height / 2,
-        1,
-        // right-bottom
-        width / 2,
-        height / 2,
-        1,
-        // right-top
-        width / 2,
-        -height / 2,
-        1,
-      ],
-      3,
-    ),
-  )
-  geometry.setAttribute(
-    'normal',
-    new THREE.Float32BufferAttribute(
-      [
-        // left-top
-        0,
-        0,
-        1,
-        // left-bottom
-        0,
-        0,
-        1,
-        // right-bottom
-        0,
-        0,
-        1,
-        // right-top
-        0,
-        0,
-        1,
-      ],
-      3,
-    ),
-  )
-  geometry.setAttribute(
-    'uv',
-    new THREE.Float32BufferAttribute(
-      [
-        // left-top
-        0,
-        0,
-        // left-bottom
-        0,
-        1,
-        // right-bottom
-        1,
-        1,
-        // right-top
-        0,
-        1,
-      ],
-      2,
-    ),
-  )
-
-  const video = document.createElement('video')
-  video.src = videoUrl
-  video.autoplay = true
-  video.loop = true
-
-  const texture = new THREE.VideoTexture(video)
-  const material = new THREE.MeshBasicMaterial({ map: texture })
-  material.side = THREE.DoubleSide
-  return new THREE.Mesh(geometry, material)
-}
-
-export const Scene: React.FunctionComponent<AppState> = ({
-  videoUrl,
-  samplers,
-  viewPort,
-}) => {
+export const Scene: React.FC<AppState> = ({ videoUrl, samplers, viewPort }) => {
   const { texture, loading, videoWidth, videoHeight } = useVideoTexture(
     videoUrl,
   )
@@ -171,14 +79,6 @@ export const Scene: React.FunctionComponent<AppState> = ({
 
   const scene = useMemo(() => new THREE.Scene(), [])
 
-  // useEffect(() => {
-  //   if (!videoUrl) {
-  //     return
-  //   }
-  //   const mesh = createDemoMesh(viewPort.width, viewPort.height, videoUrl)
-  //   scene.add(mesh)
-  // }, [scene])
-
   useEffect(() => {
     let handle: number | undefined
 
@@ -187,7 +87,6 @@ export const Scene: React.FunctionComponent<AppState> = ({
       if (!renderer) {
         return
       }
-      console.log('render', scene.children.length)
       renderer.render(scene, camera)
     }
 
@@ -200,6 +99,27 @@ export const Scene: React.FunctionComponent<AppState> = ({
     }
   }, [renderer, camera, scene])
 
+  const [meshes, setMeshes] = useState<THREE.Mesh[] | undefined>()
+
+  useEffect(() => {
+    if (!videoUrl) {
+      return
+    }
+    const meshes = Array.from({ length: samplers.length }).map(() => {
+      return new THREE.Mesh()
+    })
+    for (const mesh of meshes) {
+      scene.add(mesh)
+    }
+    setMeshes(meshes)
+
+    return () => {
+      for (const mesh of meshes) {
+        scene.remove(mesh)
+      }
+    }
+  }, [scene, samplers.length, videoUrl])
+
   return (
     <>
       <canvas
@@ -208,23 +128,21 @@ export const Scene: React.FunctionComponent<AppState> = ({
         ref={canvasRef}
       ></canvas>
 
-      {samplers.map((sampler, index) => {
-        return (
-          <MeshNode
-            key={index.toString()}
-            texture={texture}
-            sampler={sampler}
-            viewPort={viewPort}
-            videoWidth={videoWidth}
-            videoHeight={videoHeight}
-            controlPoints={sampler.warp.controlPoints}
-            updateMesh={mesh => scene.add(mesh)}
-          ></MeshNode>
-        )
-      })}
+      {texture &&
+        meshes &&
+        samplers.map((sampler, index) => {
+          return (
+            <MeshNode
+              key={index.toString()}
+              texture={texture}
+              sampler={sampler}
+              videoWidth={videoWidth}
+              videoHeight={videoHeight}
+              controlPoints={sampler.warp.controlPoints}
+              mesh={meshes[index]}
+            ></MeshNode>
+          )
+        })}
     </>
   )
-  //   canvasSize && (<canvas ref={canvasRef}>
-
-  //   </canvas>)
 }

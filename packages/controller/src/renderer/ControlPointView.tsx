@@ -12,7 +12,7 @@ export interface ControlPointProps {
 }
 
 export const ControlPoint: React.FC<ControlPointProps> = React.memo(
-  ({ containerRef, point, setPoint, draggable, className, radius }) => {
+  ({ containerRef, point, setPoint, draggable, className }) => {
     const [{ isDragging, coord }, dragRef] = useDrag({
       item: {
         type: 'Point',
@@ -38,7 +38,7 @@ export const ControlPoint: React.FC<ControlPointProps> = React.memo(
         x: coord.x - boundingRect.left,
         y: coord.y - boundingRect.top,
       })
-    }, [draggable, isDragging, coord, containerRef, setPoint])
+    }, [draggable, isDragging, coord, containerRef])
 
     return (
       <g

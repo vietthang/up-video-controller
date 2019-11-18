@@ -28,10 +28,10 @@ export const App: React.FC = () => {
         warp: {
           type: 'bilinear',
           linear: true,
-          resolution: 2048,
-          controlsX: 0,
-          controlsY: 0,
-          controlPoints: generateControlPoints(0, 0),
+          resolution: 16,
+          controlsX: 1,
+          controlsY: 1,
+          controlPoints: generateControlPoints(1, 1),
         },
         view: {
           edit: true,
@@ -126,19 +126,7 @@ export const App: React.FC = () => {
         height: localAppState.viewPort.height,
       }}
     >
-      {/* <Canvas
-        invalidateFrameloop={false}
-        style={{
-          position: 'absolute',
-          left: 0,
-          top: 0,
-          width: '100%',
-          height: '100%',
-        }}
-        orthographic={true}
-      > */}
       <Scene {...localAppState}></Scene>
-      {/* </Canvas> */}
       <div
         style={{
           position: 'absolute',

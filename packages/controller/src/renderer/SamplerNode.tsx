@@ -1,9 +1,9 @@
 import './SamplerNode.css'
 
 import { update } from 'ramda'
-import React, { ReactElement, useRef } from 'react'
+import React, { Dispatch, ReactElement, SetStateAction, useRef } from 'react'
 import { DndProvider } from 'react-dnd'
-import { Point } from '../common'
+import { Point, useSelectSetter } from '../common'
 import { Sampler } from '../state'
 import { ControlPoint } from './ControlPointView'
 
@@ -31,7 +31,7 @@ export interface SamplerNodeProps {
   showControlPoints: boolean
   showRenderPoints: boolean
   controlPoints: Point[]
-  setControlPoints: (points: Point[]) => void
+  setControlPoints: Dispatch<SetStateAction<Point[]>>
 }
 
 export const EditSamplerView: React.FC<SamplerNodeProps> = ({
@@ -41,56 +41,9 @@ export const EditSamplerView: React.FC<SamplerNodeProps> = ({
   controlPoints,
   setControlPoints,
 }) => {
-  // useEffect(() => {
-  //   const renderPoints: Point[] = new Array(
-  //     (yPointCount + 1) * (xPointCount + 1),
-  //   )
-  //   let i = 0
-  //   for (let y = 0; y < yPointCount + 1; y++) {
-  //     for (let x = 0; x < xPointCount + 1; x++) {
-  //       const cx = (x / xPointCount) * (sampler.warp.controlsX + 1)
-  //       const cy = (y / yPointCount) * (sampler.warp.controlsY + 1)
-
-  //       const controlX = Math.floor(cx)
-  //       const u = cx - controlX
-  //       const controlY = Math.floor(cy)
-  //       const v = cy - controlY
-
-  //       const rows: Point[] = []
-  //       for (let i = -1; i < 3; ++i) {
-  //         const cols: Point[] = []
-  //         for (let j = -1; j < 3; ++j) {
-  //           cols.push(
-  //             getControlPointAtExtrapolate(
-  //               sampler,
-  //               controlPoints,
-  //               controlX + i,
-  //               controlY + j,
-  //             ),
-  //           )
-  //         }
-  //         rows.push(cubicInterpolatePoint(cols as Point4, v))
-  //       }
-
-  //       renderPoints[i++] = cubicInterpolatePoint(rows as Point4, u)
-  //     }
-  //   }
-
-  //   setRenderPoints(renderPoints)
-  // }, [
-  //   // sampler, // TODO
-  //   sampler.out.width,
-  //   sampler.out.height,
-  //   sampler.warp.resolution,
-  //   sampler.warp.controlsX,
-  //   sampler.warp.controlsY,
-  //   controlPoints,
-  //   xPointCount,
-  //   yPointCount,
-  //   setRenderPoints,
-  // ])
-
   const containerRef = useRef<SVGSVGElement | null>(null)
+
+  // const selectSetter = useSelectSetter(setControlPoints)
 
   if (!controlPoints) {
     return <></>
@@ -203,7 +156,7 @@ export const EditSamplerView: React.FC<SamplerNodeProps> = ({
                     y: controlPoint.y * sampler.out.height,
                   }}
                   setPoint={point =>
-                    setControlPoints(
+                    setControlPoints(controlPoints =>
                       update(
                         index,
                         {
