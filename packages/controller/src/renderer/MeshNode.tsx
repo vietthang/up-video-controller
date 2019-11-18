@@ -169,28 +169,20 @@ export const MeshNode: React.FC<MeshNodeProps> = ({
   }, [renderPoints.length])
 
   const positionBufferAttribute = useMemo(() => {
-    return new THREE.Float32BufferAttribute(positionBuffer, 3)
-  }, [positionBuffer])
-
-  useEffect(() => {
     let i = 0
     for (const renderPoint of renderPoints) {
       positionBuffer[i++] = renderPoint.x * sampler.out.width
       positionBuffer[i++] = renderPoint.y * sampler.out.height
       positionBuffer[i++] = 0
     }
-    positionBufferAttribute.needsUpdate = true
-  }, [renderPoints, positionBuffer, positionBufferAttribute])
+    return new THREE.Float32BufferAttribute(positionBuffer, 3)
+  }, [renderPoints, positionBuffer, sampler.out.width, sampler.out.height])
 
   const uvBuffer = useMemo(() => {
     return new Float32Array(renderPoints.length * 2)
   }, [renderPoints.length])
 
   const uvBufferAttribute = useMemo(() => {
-    return new THREE.Float32BufferAttribute(uvBuffer, 2)
-  }, [uvBuffer])
-
-  useEffect(() => {
     for (let y = 0; y < yPointCount + 1; y++) {
       for (let x = 0; x < xPointCount + 1; x++) {
         const index = x + y * (xPointCount + 1)
@@ -203,18 +195,17 @@ export const MeshNode: React.FC<MeshNodeProps> = ({
           sampler.in.top / videoHeight
       }
     }
-    uvBufferAttribute.needsUpdate = true
+    return new THREE.Float32BufferAttribute(uvBuffer, 2)
   }, [
+    uvBuffer,
     xPointCount,
     yPointCount,
-    uvBuffer,
-    uvBufferAttribute,
+    videoWidth,
+    videoHeight,
     sampler.in.left,
     sampler.in.top,
     sampler.in.width,
     sampler.in.height,
-    videoWidth,
-    videoHeight,
   ])
 
   const indexBufferAttribute = useMemo(() => {
@@ -236,36 +227,71 @@ export const MeshNode: React.FC<MeshNodeProps> = ({
   }, [xPointCount, yPointCount])
 
   useEffect(() => {
-    const material = new THREE.MeshBasicMaterial({
-      map: texture || null,
-      side: THREE.DoubleSide,
-    })
-
-    mesh.material = material
-
-    return () => {
-      material.dispose()
-    }
-  }, [texture])
-
-  useEffect(() => {
     const geometry = new THREE.BufferGeometry()
     geometry.setIndex(indexBufferAttribute)
     geometry.setAttribute('position', positionBufferAttribute)
     geometry.setAttribute('uv', uvBufferAttribute)
 
+    const material = new THREE.MeshBasicMaterial({
+      map: texture || null,
+      side: THREE.DoubleSide,
+    })
+
     mesh.position.x = sampler.out.left
     mesh.position.y = sampler.out.top
     mesh.position.z = 0
     mesh.geometry = geometry
+    mesh.material = material
   }, [
     mesh,
     positionBufferAttribute,
     uvBufferAttribute,
     indexBufferAttribute,
-    sampler.out.left,
-    sampler.out.top,
+    texture,
   ])
 
+  // const geometryRef = useUpdate<THREE.BufferGeometry>(
+  //   geometry => {
+  //     geometry.deleteAttribute('position')
+  //     geometry.deleteAttribute('uv')
+  //     geometry.setAttribute('position', positionBufferAttribute)
+  //     geometry.setAttribute('uv', uvBufferAttribute)
+  //     geometry.setIndex(indexBufferAttribute)
+  //   },
+  //   [indexBufferAttribute, positionBufferAttribute, uvBufferAttribute],
+  // )
+
+  // console.log(indexBufferAttribute.array.length)
+  // console.log(positionBufferAttribute.array.length)
+  // console.log(uvBufferAttribute.array.length)
+  // console.log([outLeft - viewPort.width / 2, outTop - viewPort.height / 2, 0.0])
+
   return <></>
+
+  // return (
+  //   <group scale={[1, -1, 1]}>
+  //     <mesh
+  //       position={[
+  //         outLeft - viewPort.width / 2,
+  //         outTop - viewPort.height / 2,
+  //         0.0,
+  //       ]}
+  //     >
+  //       <bufferGeometry
+  //         // ref={geometryRef}
+  //         attach="geometry"
+  //         index={indexBufferAttribute}
+  //         attributes={{
+  //           position: positionBufferAttribute,
+  //           uv: uvBufferAttribute,
+  //         }}
+  //       />
+  //       <meshBasicMaterial
+  //         attach="material"
+  //         map={texture}
+  //         side={THREE.DoubleSide}
+  //       />
+  //     </mesh>
+  //   </group>
+  // )
 }

@@ -6,7 +6,7 @@ import { RcFile, UploadFile } from 'antd/lib/upload/interface'
 import { indexOf, remove } from 'ramda'
 import React, { useCallback, useEffect, useState } from 'react'
 import { generateControlPoints, useSelectSetter } from '../common'
-import { AppState, Sampler } from '../state'
+import { AppState, Sampler, TextureResource } from '../state'
 import { DisplayView } from './DisplayView'
 import { SamplerHeader } from './SamplerHeader'
 import { SamplerView } from './SamplerView'
@@ -15,7 +15,6 @@ const { Content } = Layout
 const { Dragger } = Upload
 
 export const Root: React.FunctionComponent = React.memo(() => {
-  const [[videoWidth, videoHeight], setVideoSize] = useState([0, 0])
   const [appState, setAppState] = useState<AppState>({
     viewPort: {
       left: 0,
@@ -29,21 +28,6 @@ export const Root: React.FunctionComponent = React.memo(() => {
   const setterSelect = useSelectSetter<AppState>(setAppState)
 
   const [fileList, setFileList] = useState<UploadFile[]>([])
-
-  useEffect(() => {
-    if (!appState.videoUrl) {
-      return
-    }
-    const video = document.createElement('video')
-    const handler = () => {
-      setVideoSize([video.videoWidth, video.videoHeight])
-    }
-    video.addEventListener('loadedmetadata', handler)
-    video.src = appState.videoUrl
-    return () => {
-      video.removeEventListener('loadedmetadata', handler)
-    }
-  }, [appState.videoUrl])
 
   const [rendererWindow, setRendererWindow] = useState<Window | null>(null)
 
@@ -97,17 +81,59 @@ export const Root: React.FunctionComponent = React.memo(() => {
 
   const handleBeforeUpload = useCallback(
     (file: RcFile) => {
-      const videoUrl = URL.createObjectURL(file)
-      setterSelect<string>('videoUrl')(videoUrl)
+      const setTextureResource = (textureResource: TextureResource): void => {
+        setAppState(appState => ({ ...appState, textureResource }))
+      }
+
+      const loadImage = (url: string) => {
+        const image = document.createElement('img')
+        image.src = url
+        image.addEventListener('load', () => {
+          setTextureResource({
+            type: 'image',
+            url,
+            width: image.width,
+            height: image.height,
+          })
+        })
+      }
+
+      const loadVideo = (url: string) => {
+        const video = document.createElement('video')
+        video.src = url
+        video.autoplay = true
+        video.loop = true
+        video.addEventListener('loadedmetadata', () => {
+          setTextureResource({
+            type: 'video',
+            url,
+            width: video.videoWidth,
+            height: video.videoHeight,
+          })
+        })
+      }
+      const fileUrl = URL.createObjectURL(file)
+
+      switch (true) {
+        case file.name.endsWith('.mp4'):
+          loadVideo(fileUrl)
+          break
+        case file.name.endsWith('.jpg'):
+        case file.name.endsWith('.jpeg'):
+        case file.name.endsWith('.png'):
+          loadImage(fileUrl)
+          break
+      }
+
       setFileList([file])
       return false
     },
-    [setterSelect, setFileList],
+    [setAppState, setFileList],
   )
 
   const handleRemove = useCallback(
     (file: UploadFile<any>) => {
-      setterSelect<string | undefined>('videoUrl')(undefined)
+      setterSelect<TextureResource | undefined>('textureResource')(undefined)
       setFileList(fileList => remove(indexOf(file, fileList), 1, fileList))
     },
     [setterSelect, setFileList],
@@ -167,8 +193,16 @@ export const Root: React.FunctionComponent = React.memo(() => {
             >
               {samplers.map((sampler, index) => (
                 <SamplerView
-                  videoWidth={videoWidth}
-                  videoHeight={videoHeight}
+                  videoWidth={
+                    appState.textureResource
+                      ? appState.textureResource.width
+                      : 1
+                  }
+                  videoHeight={
+                    appState.textureResource
+                      ? appState.textureResource.height
+                      : 1
+                  }
                   outputWidth={viewPort.width}
                   outputHeight={viewPort.height}
                   sampler={sampler}

@@ -19,8 +19,24 @@ export interface Sampler {
   }
 }
 
+export interface ImageTextureResource {
+  type: 'image'
+  url: string
+  width: number
+  height: number
+}
+
+export interface VideoTextureResource {
+  type: 'video'
+  url: string
+  width: number
+  height: number
+}
+
+export type TextureResource = ImageTextureResource | VideoTextureResource
+
 export interface AppState {
-  videoUrl?: string
+  textureResource?: TextureResource
   viewPort: Region
   samplers: Sampler[]
 }

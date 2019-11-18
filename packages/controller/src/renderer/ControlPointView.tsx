@@ -8,7 +8,6 @@ export interface ControlPointProps {
   setPoint?: (point: Point) => void
   draggable: boolean
   className: string
-  radius: number
 }
 
 export const ControlPoint: React.FC<ControlPointProps> = React.memo(

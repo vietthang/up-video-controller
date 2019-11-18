@@ -9,14 +9,19 @@ import { Scene } from './Scene'
 
 export const App: React.FC = () => {
   const [localAppState, setLocalAppState] = useState<AppState>({
-    videoUrl: './BBB.mp4',
+    textureResource: {
+      type: 'image',
+      url: './1280x720.jpg',
+      width: 1280,
+      height: 720,
+    },
     viewPort: { left: 0, top: 0, width: 1280, height: 720 },
     samplers: [
       {
         in: {
           left: 0,
           top: 0,
-          width: 640,
+          width: 1280,
           height: 720,
         },
         out: {

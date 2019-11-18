@@ -170,7 +170,6 @@ export const EditSamplerView: React.FC<SamplerNodeProps> = ({
                   containerRef={containerRef}
                   draggable={true}
                   className="controlPoint"
-                  radius={32}
                 />
               )
             })}
