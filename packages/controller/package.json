@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "antd": "^3.24.3",
+    "google-protobuf": "^3.10.0",
     "ramda": "^0.26.1",
     "react": "^16.11.0",
     "react-dom": "^16.11.0",
@@ -31,5 +32,8 @@
       "last 1 safari version"
     ]
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@types/google-protobuf": "^3.7.2",
+    "ts-protoc-gen": "^0.12.0"
+  }
 }

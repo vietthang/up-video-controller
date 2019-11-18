@@ -1,4 +1,4 @@
-import { app, BrowserWindow, screen } from 'electron'
+import { app, BrowserWindow } from 'electron'
 
 let mainWindow: Electron.BrowserWindow
 
@@ -16,36 +16,6 @@ function createWindow() {
   })
 
   const controllerUrl = new URL('http://localhost:3000')
-  controllerUrl.searchParams.append(
-    'config',
-    JSON.stringify({
-      displays: screen.getAllDisplays().map(display => ({
-        id: display.id.toString(),
-        viewPort: {
-          left: display.bounds.x,
-          top: display.bounds.y,
-          width: display.bounds.width,
-          height: display.bounds.height,
-        },
-      })),
-    }),
-  )
-  const syncDisplays = () => {
-    mainWindow.webContents.send('updateConfig', {
-      displays: screen.getAllDisplays().map(display => ({
-        id: display.id.toString(),
-        viewPort: {
-          left: display.bounds.x,
-          top: display.bounds.y,
-          width: display.bounds.width,
-          height: display.bounds.height,
-        },
-      })),
-    })
-  }
-  screen.addListener('display-added', syncDisplays)
-  screen.addListener('display-removed', syncDisplays)
-  screen.addListener('display-metrics-changed', syncDisplays)
   mainWindow
     .loadURL(controllerUrl.toString())
     .catch(error => console.error(error))

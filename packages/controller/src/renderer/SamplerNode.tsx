@@ -43,8 +43,6 @@ export const EditSamplerView: React.FC<SamplerNodeProps> = ({
 }) => {
   const containerRef = useRef<SVGSVGElement | null>(null)
 
-  // const selectSetter = useSelectSetter(setControlPoints)
-
   if (!controlPoints) {
     return <></>
   }

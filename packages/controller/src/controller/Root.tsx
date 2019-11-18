@@ -26,9 +26,7 @@ export const Root: React.FunctionComponent = React.memo(() => {
   })
   const { samplers, viewPort } = appState
   const setterSelect = useSelectSetter<AppState>(setAppState)
-
   const [fileList, setFileList] = useState<UploadFile[]>([])
-
   const [rendererWindow, setRendererWindow] = useState<Window | null>(null)
 
   useEffect(() => {
