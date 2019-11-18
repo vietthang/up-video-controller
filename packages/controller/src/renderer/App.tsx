@@ -4,14 +4,14 @@ import React, { SetStateAction, useCallback, useEffect, useState } from 'react'
 import { generateControlPoints, useSelectSetter } from '../common'
 import { AppState } from '../state'
 import { useEffectAsync } from '../utils'
+import { BabylonScene } from './BabylonScene'
 import { EditSamplerView } from './SamplerNode'
-import { Scene } from './Scene'
 
 export const App: React.FC = () => {
   const [localAppState, setLocalAppState] = useState<AppState>({
     textureResource: {
-      type: 'image',
-      url: './1280x720.jpg',
+      type: 'video',
+      url: './BBB.mp4',
       width: 1280,
       height: 720,
     },
@@ -34,9 +34,9 @@ export const App: React.FC = () => {
           type: 'bilinear',
           linear: true,
           resolution: 16,
-          controlsX: 1,
-          controlsY: 1,
-          controlPoints: generateControlPoints(1, 1),
+          controlsX: 2,
+          controlsY: 2,
+          controlPoints: generateControlPoints(2, 2),
         },
         view: {
           edit: true,
@@ -131,7 +131,7 @@ export const App: React.FC = () => {
         height: localAppState.viewPort.height,
       }}
     >
-      <Scene {...localAppState}></Scene>
+      <BabylonScene {...localAppState}></BabylonScene>
       <div
         style={{
           position: 'absolute',

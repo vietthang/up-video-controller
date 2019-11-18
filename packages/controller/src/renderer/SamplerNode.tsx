@@ -3,7 +3,7 @@ import './SamplerNode.css'
 import { update } from 'ramda'
 import React, { Dispatch, ReactElement, SetStateAction, useRef } from 'react'
 import { DndProvider } from 'react-dnd'
-import { Point, useSelectSetter } from '../common'
+import { Point } from '../common'
 import { Sampler } from '../state'
 import { ControlPoint } from './ControlPointView'
 

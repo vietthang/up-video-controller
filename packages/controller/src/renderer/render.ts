@@ -90,9 +90,9 @@ export interface UseGenerateRenderPrimitivesOptions {
   sampler: Sampler
   textureWidth: number
   textureHeight: number
-  onPositionBufferChange?: () => void
-  onUvBufferChange?: () => void
-  onIndexBufferChange?: () => void
+  onPositionBufferChange?: (buffer: Float32Array) => void
+  onUvBufferChange?: (buffer: Float32Array) => void
+  onIndexBufferChange?: (buffer: Uint16Array) => void
 }
 
 export function useGenerateRenderPrimitives({
@@ -181,8 +181,14 @@ export function useGenerateRenderPrimitives({
       positionBuffer[i++] = 0
     }
 
-    onPositionBufferChange && onPositionBufferChange()
-  }, [renderPoints, positionBuffer, sampler.out.width, sampler.out.height])
+    onPositionBufferChange && onPositionBufferChange(positionBuffer)
+  }, [
+    renderPoints,
+    positionBuffer,
+    sampler.out.width,
+    sampler.out.height,
+    onPositionBufferChange,
+  ])
 
   const uvBuffer = useMemo(() => {
     return new Float32Array(renderPoints.length * 2)
@@ -202,7 +208,7 @@ export function useGenerateRenderPrimitives({
       }
     }
 
-    onUvBufferChange && onUvBufferChange()
+    onUvBufferChange && onUvBufferChange(uvBuffer)
   }, [
     uvBuffer,
     xPointCount,
@@ -213,6 +219,7 @@ export function useGenerateRenderPrimitives({
     sampler.in.top,
     sampler.in.width,
     sampler.in.height,
+    onUvBufferChange,
   ])
 
   const indexBuffer = useMemo(() => {
@@ -233,8 +240,8 @@ export function useGenerateRenderPrimitives({
   }, [xPointCount, yPointCount])
 
   useEffect(() => {
-    onIndexBufferChange && onIndexBufferChange()
-  }, [indexBuffer])
+    onIndexBufferChange && onIndexBufferChange(indexBuffer)
+  }, [indexBuffer, onIndexBufferChange])
 
   return { positionBuffer, uvBuffer, indexBuffer }
 }

@@ -9,7 +9,9 @@ import {
 import { MeshNode } from './MeshNode'
 
 function loadImageTexture(resource: ImageTextureResource): THREE.Texture {
-  return new THREE.TextureLoader().load(resource.url)
+  const texture = new THREE.TextureLoader().load(resource.url)
+  texture.minFilter = THREE.LinearFilter
+  return texture
 }
 
 function loadVideoTexture(resource: VideoTextureResource): THREE.Texture {
@@ -126,7 +128,6 @@ export const Scene: React.FC<AppState> = ({
               sampler={sampler}
               videoWidth={(textureResource && textureResource.width) || 1}
               videoHeight={(textureResource && textureResource.height) || 1}
-              controlPoints={sampler.warp.controlPoints}
               mesh={meshes[index]}
             ></MeshNode>
           )
