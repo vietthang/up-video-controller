@@ -1,17 +1,14 @@
 {
-  "name": "nestjs-utils",
-  "workspaces": [
-    "packages/*"
-  ],
+  "name": "up-video-controller",
   "scripts": {
-    "clean": "lerna run clean --stream --parallel",
-    "build": "lerna run build --stream --parallel",
+    "start": "craco start",
+    "build": "craco build",
+    "test": "craco test",
+    "ele": "electron electron.main.js",
     "lint": "tslint --project tsconfig.json",
     "format": "tslint --project tsconfig.json --fix",
     "pretest": "yarn lint",
-    "test": "lerna run test --stream --parallel",
-    "start": "yarn workspace @sample-monorepo/app start",
-    "prettify": "yarn prettier \"packages/**/*.{js,ts,tsx}\" --write"
+    "prettify": "yarn prettier \"src/**/*.{js,ts,tsx}\" --write"
   },
   "engines": {
     "node": ">=10.4.0"
@@ -20,31 +17,46 @@
     "@craco/craco": "^5.6.1",
     "@types/jest": "^24.0.22",
     "@types/node": "^12.12.6",
+    "@types/pouchdb": "^6.4.0",
     "@types/ramda": "^0.26.33",
     "@types/react": "^16.9.11",
     "@types/react-dom": "^16.9.3",
+    "antd": "^3.25.2",
+    "babylonjs": "^4.0.3",
     "electron": "^7.0.1",
     "jest": "^24.9.0",
-    "lerna": "^3.16.4",
     "npm-run-all": "^4.1.5",
+    "pouchdb": "^7.1.1",
     "prettier": "^1.18.2",
+    "ramda": "^0.26.1",
+    "react": "^16.12.0",
     "react-dnd": "^9.4.0",
-    "react-dnd-html5-backend": "^9.4.0",
     "react-dnd-mouse-backend": "^1.0.0-rc.2",
+    "react-dom": "^16.12.0",
     "react-scripts": "^3.2.0",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.0",
     "rxjs": "^6.0.0",
-    "ts-jest": "^24.1.0",
-    "ts-node": "^8.3.0",
-    "tsdx": "^0.9.3",
     "tslint": "^5.20.0",
     "tslint-config-prettier": "^1.18.0",
     "tslint-config-standard": "^8.0.1",
     "tslint-plugin-prettier": "^2.0.1",
-    "typescript": "^3.7.2"
+    "typescript": "^3.7.2",
+    "use-query-params": "^0.4.5"
   },
   "license": "MIT",
   "private": true,
-  "dependencies": {}
+  "dependencies": {},
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
 }

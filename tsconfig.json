@@ -1,6 +1,32 @@
 {
-  "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "module": "commonjs"
-  }
+    "target": "esnext",
+    "module": "esnext",
+    "lib": ["es2019", "dom"],
+    "allowJs": true,
+    "jsx": "react",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "incremental": true,
+    "removeComments": false,
+    "strict": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "moduleResolution": "node",
+    "baseUrl": "./",
+    "types": ["jest", "electron"],
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "noEmit": true
+  },
+  "exclude": ["**/dist/**/*.d.ts"],
+  "include": ["src"]
 }
