@@ -15,7 +15,7 @@ export const App: React.FC = () => {
       width: 1280,
       height: 720,
     },
-    viewPort: { left: 0, top: 0, width: 1280, height: 720 },
+    viewPort: { left: 0, top: 0, width: 1280, height: 1920 },
     samplers: [
       {
         in: {
@@ -28,7 +28,7 @@ export const App: React.FC = () => {
           left: 0,
           top: 0,
           width: 1280,
-          height: 720,
+          height: 1920,
         },
         warp: {
           type: 'bilinear',

@@ -275,7 +275,7 @@ export const Root: React.FunctionComponent = React.memo(() => {
                         left: 0,
                         top: 0,
                         width: 1280,
-                        height: 720,
+                        height: 1920,
                       },
                       warp: {
                         type: 'bilinear',

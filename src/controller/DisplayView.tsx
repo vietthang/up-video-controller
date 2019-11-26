@@ -11,7 +11,7 @@ function useDisplays(): Display[] {
         left: 0,
         top: 0,
         width: 1280,
-        height: 720,
+        height: 1920,
       },
     },
   ])
@@ -63,7 +63,7 @@ export const DisplayView: React.FunctionComponent<DisplayViewProps> = ({
     ...displays.map(display => display.viewPort.left + display.viewPort.width),
   )
   const minTop = Math.min(...displays.map(display => display.viewPort.top))
-  const maxBottom = Math.min(
+  const maxBottom = Math.max(
     ...displays.map(display => display.viewPort.top + display.viewPort.height),
   )
 
