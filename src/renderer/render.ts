@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import React from 'react'
 import { cubicInterpolatePoint, Point, Point4 } from '../common'
 import { Sampler } from '../state'
 
@@ -93,6 +93,8 @@ export interface UseGenerateRenderPrimitivesOptions {
   onPositionBufferChange?: (buffer: Float32Array) => void
   onUvBufferChange?: (buffer: Float32Array) => void
   onIndexBufferChange?: (buffer: Uint16Array) => void
+  useMemo?: typeof import('react').useMemo
+  useEffect?: typeof import('react').useEffect
 }
 
 export function useGenerateRenderPrimitives({
@@ -102,6 +104,8 @@ export function useGenerateRenderPrimitives({
   onPositionBufferChange,
   onUvBufferChange,
   onIndexBufferChange,
+  useMemo = React.useMemo,
+  useEffect = React.useEffect,
 }: UseGenerateRenderPrimitivesOptions): UseGenerateRenderPrimitives {
   const xPointCount = useMemo(
     () => Math.floor(sampler.out.width / sampler.warp.resolution) + 1,

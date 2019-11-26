@@ -8,6 +8,7 @@ import {
   saveStoreItem,
   StoreItem,
 } from '../store'
+import { SaveRenderMenuItem } from './SaveRenderMenuItem'
 
 export interface HeaderProps {
   appState: AppState
@@ -180,20 +181,8 @@ export const AppHeader: React.FC<HeaderProps> = ({ appState, setAppState }) => {
                 </div>
               </Tooltip>
             </Menu.Item>
-            <Menu.Item key="saveRender">
-              <Tooltip title="Save Render Primitives">
-                <div style={{ width: '100%', height: '100%' }}>
-                  <Icon
-                    type="container"
-                    title="Save Render Primitives"
-                    style={{
-                      fontSize: '32px',
-                      marginRight: 0,
-                      lineHeight: '64px',
-                    }}
-                  />
-                </div>
-              </Tooltip>
+            <Menu.Item key="saveRender" style={{ padding: '0' }}>
+              <SaveRenderMenuItem appState={appState} />
             </Menu.Item>
           </Menu>
         </div>

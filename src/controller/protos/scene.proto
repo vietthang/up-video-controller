@@ -72,3 +72,15 @@ message Scene {
   repeated Mesh meshes = 3;
   Node rootNode = 4;
 }
+
+message RenderItem {
+  int32 vertexCount = 1;
+  bytes positionBuffer = 2;
+  bytes uvBuffer = 3;
+  int32 indexCount = 4;
+  bytes indexBuffer = 5;
+}
+
+message RenderItems {
+  repeated RenderItem items = 1;
+}

@@ -280,7 +280,7 @@ export const Root: React.FunctionComponent = React.memo(() => {
                       warp: {
                         type: 'bilinear',
                         linear: true,
-                        resolution: 256,
+                        resolution: 16,
                         controlsX: 1,
                         controlsY: 1,
                         controlPoints: generateControlPoints(1, 1),

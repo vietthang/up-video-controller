@@ -1,5 +1,5 @@
 // package: 
-// file: src/controller/protos/scene.proto
+// file: scene.proto
 
 import * as jspb from "google-protobuf";
 
@@ -299,6 +299,70 @@ export namespace Scene {
     bufferviewsList: Array<BufferView.AsObject>,
     meshesList: Array<Mesh.AsObject>,
     rootnode?: Node.AsObject,
+  }
+}
+
+export class RenderItem extends jspb.Message {
+  getVertexcount(): number;
+  setVertexcount(value: number): void;
+
+  getPositionbuffer(): Uint8Array | string;
+  getPositionbuffer_asU8(): Uint8Array;
+  getPositionbuffer_asB64(): string;
+  setPositionbuffer(value: Uint8Array | string): void;
+
+  getUvbuffer(): Uint8Array | string;
+  getUvbuffer_asU8(): Uint8Array;
+  getUvbuffer_asB64(): string;
+  setUvbuffer(value: Uint8Array | string): void;
+
+  getIndexcount(): number;
+  setIndexcount(value: number): void;
+
+  getIndexbuffer(): Uint8Array | string;
+  getIndexbuffer_asU8(): Uint8Array;
+  getIndexbuffer_asB64(): string;
+  setIndexbuffer(value: Uint8Array | string): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): RenderItem.AsObject;
+  static toObject(includeInstance: boolean, msg: RenderItem): RenderItem.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+  static serializeBinaryToWriter(message: RenderItem, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): RenderItem;
+  static deserializeBinaryFromReader(message: RenderItem, reader: jspb.BinaryReader): RenderItem;
+}
+
+export namespace RenderItem {
+  export type AsObject = {
+    vertexcount: number,
+    positionbuffer: Uint8Array | string,
+    uvbuffer: Uint8Array | string,
+    indexcount: number,
+    indexbuffer: Uint8Array | string,
+  }
+}
+
+export class RenderItems extends jspb.Message {
+  clearItemsList(): void;
+  getItemsList(): Array<RenderItem>;
+  setItemsList(value: Array<RenderItem>): void;
+  addItems(value?: RenderItem, index?: number): RenderItem;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): RenderItems.AsObject;
+  static toObject(includeInstance: boolean, msg: RenderItems): RenderItems.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+  static serializeBinaryToWriter(message: RenderItems, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): RenderItems;
+  static deserializeBinaryFromReader(message: RenderItems, reader: jspb.BinaryReader): RenderItems;
+}
+
+export namespace RenderItems {
+  export type AsObject = {
+    itemsList: Array<RenderItem.AsObject>,
   }
 }
 

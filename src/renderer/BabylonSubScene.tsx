@@ -37,8 +37,8 @@ function loadVideoTexture(
     undefined,
     undefined,
     {
-      autoPlay: true,
       autoUpdateTexture: true,
+      autoPlay: true,
       loop: true,
     },
   )

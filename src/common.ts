@@ -1,5 +1,5 @@
 import { lensPath, memoizeWith, set, view } from 'ramda'
-import { Dispatch, SetStateAction, useMemo } from 'react'
+import { Dispatch, SetStateAction, useEffect, useMemo } from 'react'
 
 export interface Point {
   x: number
@@ -99,4 +99,30 @@ export function useSelectSetter<S>(
       },
     )
   }, [setState])
+}
+
+export interface ReactHooks {
+  useMemo: typeof useMemo
+  useEffect: typeof useEffect
+}
+
+export function doHooks<T>(callback: (hooks: ReactHooks) => T): T {
+  const cleaners: Array<() => void> = []
+  const hooks: ReactHooks = {
+    useMemo: <T>(factory: () => T): T => {
+      return factory()
+    },
+    useEffect: effectCallback => {
+      const ret = effectCallback()
+      if (!ret) {
+        return
+      }
+      cleaners.unshift(ret)
+    },
+  }
+  const result = callback(hooks)
+  for (const cleaner of cleaners) {
+    cleaner()
+  }
+  return result
 }

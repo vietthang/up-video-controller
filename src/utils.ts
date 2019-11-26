@@ -6,26 +6,22 @@ type EffectAyncCallback = () => Resolvable<
   void | (() => Resolvable<void | undefined>)
 >
 
-export type AsyncState =
+export type AsyncState<T> =
   | { state: 'pending' }
-  | { state: 'finished' }
-  | { state: 'error'; error: any }
+  | { state: 'resolved'; value: T }
+  | { state: 'rejected'; error: any }
 
-function toAsync(
+async function executeAsync(
   cb: EffectAyncCallback,
 ): Promise<void | (() => Resolvable<void | undefined>)> {
-  return new Promise((resolve, reject) => {
-    return Promise.resolve(cb())
-      .then(resolve)
-      .catch(reject)
-  })
+  return cb()
 }
 
 export function useEffectAsync(
   callback: EffectAyncCallback,
   deps: DependencyList = [],
-): AsyncState {
-  const [effectState, setEffectState] = useState<AsyncState>({
+): AsyncState<void> {
+  const [effectState, setEffectState] = useState<AsyncState<void>>({
     state: 'pending',
   })
 
@@ -33,9 +29,9 @@ export function useEffectAsync(
     let active = true
     let unmountCallback: (() => Resolvable<void | undefined>) | undefined
 
-    Promise.resolve(toAsync(callback))
+    executeAsync(callback)
       .then(ret => {
-        setEffectState({ state: 'finished' })
+        setEffectState({ state: 'resolved', value: undefined })
 
         if (!ret) {
           return
@@ -47,17 +43,42 @@ export function useEffectAsync(
         // resolved after unmount, just call the release
         return ret()
       })
-      .catch(error => setEffectState({ state: 'error', error }))
+      .catch(error => setEffectState({ state: 'rejected', error }))
 
     return () => {
       active = false
       if (unmountCallback) {
-        Promise.resolve(unmountCallback()).catch(error =>
-          setEffectState({ state: 'error', error }),
+        executeAsync(unmountCallback).catch(error =>
+          setEffectState({ state: 'rejected', error }),
         )
       }
     }
-  }, [...deps])
+  }, [...deps, setEffectState])
 
   return effectState
+}
+
+export function useResource<T>(
+  creator: () => Resolvable<T>,
+  remover: (value: T) => Resolvable<void>,
+  deps: DependencyList = [],
+): AsyncState<T> {
+  const [resourceState, setResourceState] = useState<AsyncState<T>>({
+    state: 'pending',
+  })
+
+  const effectState = useEffectAsync(async () => {
+    const value = await creator()
+    return async () => {
+      await remover(value)
+    }
+  }, deps)
+
+  useEffect(() => {
+    if (effectState.state === 'rejected') {
+      setResourceState(effectState)
+    }
+  }, [effectState, setResourceState])
+
+  return resourceState
 }
