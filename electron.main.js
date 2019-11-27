@@ -1,17 +1,34 @@
 const { app, BrowserWindow } = require('electron')
 
+let mainWindow
+
+// console.log(chrome)
+console.log(require('electron'))
+
 function createWindow() {
   // Create the browser window.
   mainWindow = new BrowserWindow({
     height: 720,
     width: 960,
-    frame: false,
+    frame: true,
     webPreferences: {
       nodeIntegration: true,
       webSecurity: false,
       nativeWindowOpen: true,
     },
   })
+
+  mainWindow.webContents.on(
+    'new-window',
+    (event, url, frameName, disposition, options, additionalFeatures) => {
+      event.preventDefault()
+      Object.assign(options, {
+        frame: false,
+        modal: false,
+      })
+      event.newGuest = new BrowserWindow(options)
+    },
+  )
 
   const controllerUrl = new URL('http://localhost:3000')
   mainWindow

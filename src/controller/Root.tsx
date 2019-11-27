@@ -14,7 +14,13 @@ import {
 } from 'antd'
 import { RcFile, UploadFile } from 'antd/lib/upload/interface'
 import { indexOf, remove } from 'ramda'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, {
+  Dispatch,
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useState,
+} from 'react'
 import { generateControlPoints, useSelectSetter } from '../common'
 import { AppState, Sampler, TextureResource } from '../state'
 import { DisplayView } from './DisplayView'
@@ -24,6 +30,13 @@ import { SamplerView } from './SamplerView'
 
 const { Content } = Layout
 const { Dragger } = Upload
+
+declare global {
+  interface Window {
+    appState?: AppState
+    setAppState?: Dispatch<SetStateAction<AppState>>
+  }
+}
 
 export const Root: React.FunctionComponent = React.memo(() => {
   const [appState, setAppState] = useState<AppState>({
@@ -36,77 +49,60 @@ export const Root: React.FunctionComponent = React.memo(() => {
     samplers: [],
     isPlaying: false,
   })
-  const { samplers, viewPort } = appState
   const setterSelect = useSelectSetter<AppState>(setAppState)
   const [fileList, setFileList] = useState<UploadFile[]>([])
   const [rendererWindow, setRendererWindow] = useState<Window | null>(null)
 
   useEffect(() => {
-    if (rendererWindow) {
-      return
-    }
     if (!appState.isPlaying) {
       return
     }
+
     const newRendererWindow = window.open(
       './?app=renderer',
       'renderer',
-      'menubar=no,status=no,titlebar=no,toolbar=no',
+      `menubar=no,status=no,titlebar=no,toolbar=no,frame=0`,
     )
     if (!newRendererWindow) {
       notification.error({ message: 'Failed to open new window' })
       return
     }
     setRendererWindow(newRendererWindow)
-  }, [rendererWindow, appState.isPlaying, setAppState])
-
-  useEffect(() => {
-    if (!rendererWindow) {
-      return
-    }
-
-    const closeHandler = () => {
-      setRendererWindow(null)
-      setAppState(oldState => ({ ...oldState, isPlaying: false }))
-    }
-
-    rendererWindow.addEventListener('beforeunload', closeHandler)
 
     return () => {
-      rendererWindow.removeEventListener('beforeunload', closeHandler)
+      newRendererWindow.close()
+      setRendererWindow(null)
     }
-  }, [rendererWindow])
+  }, [appState.isPlaying])
 
   useEffect(() => {
     if (!rendererWindow) {
       return
     }
 
-    rendererWindow.moveTo(viewPort.left, viewPort.top)
-    rendererWindow.resizeTo(viewPort.width, viewPort.height)
+    rendererWindow.window.moveTo(appState.viewPort.left, appState.viewPort.top)
+    rendererWindow.window.resizeTo(
+      appState.viewPort.width,
+      appState.viewPort.height,
+    )
   }, [
     rendererWindow,
-    viewPort.left,
-    viewPort.top,
-    viewPort.width,
-    viewPort.height,
+    appState.viewPort.left,
+    appState.viewPort.top,
+    appState.viewPort.width,
+    appState.viewPort.height,
   ])
 
   useEffect(() => {
-    if (!rendererWindow) {
-      return
-    }
+    window.setAppState = setAppState
+  }, [setAppState])
 
-    rendererWindow.window.parentApp = { appState, setAppState }
-
+  useEffect(() => {
     const event = new Event('appStateChanged')
     event.appState = appState
-    rendererWindow.window.dispatchEvent(event)
-
-    return () => {
-      rendererWindow.window.parentApp = undefined
-    }
-  }, [rendererWindow, appState, setAppState])
+    window.appState = appState
+    window.dispatchEvent(event)
+  }, [appState])
 
   const handleBeforeUpload = useCallback(
     (file: RcFile) => {
@@ -170,7 +166,11 @@ export const Root: React.FunctionComponent = React.memo(() => {
 
   return (
     <Layout>
-      <AppHeader appState={appState} setAppState={setAppState} />
+      <AppHeader
+        appState={appState}
+        setAppState={setAppState}
+        rendererWindow={rendererWindow}
+      />
       <Content
         style={{
           background: 'white',
@@ -215,7 +215,7 @@ export const Root: React.FunctionComponent = React.memo(() => {
               <h2>Setup Canvas Viewport</h2>
             </Divider>
             <DisplayView
-              viewport={viewPort}
+              viewport={appState.viewPort}
               setViewport={setterSelect('viewPort')}
             />
 
@@ -225,9 +225,9 @@ export const Root: React.FunctionComponent = React.memo(() => {
 
             <Collapse
               bordered={true}
-              activeKey={samplers.map((_, index) => index.toString())}
+              activeKey={appState.samplers.map((_, index) => index.toString())}
             >
-              {samplers.map((sampler, index) => (
+              {appState.samplers.map((sampler, index) => (
                 <SamplerView
                   videoWidth={
                     appState.textureResource
@@ -239,8 +239,8 @@ export const Root: React.FunctionComponent = React.memo(() => {
                       ? appState.textureResource.height
                       : 1
                   }
-                  outputWidth={viewPort.width}
-                  outputHeight={viewPort.height}
+                  outputWidth={appState.viewPort.width}
+                  outputHeight={appState.viewPort.height}
                   sampler={sampler}
                   key={index.toString()}
                   header={
@@ -274,7 +274,7 @@ export const Root: React.FunctionComponent = React.memo(() => {
                       out: {
                         left: 0,
                         top: 0,
-                        width: 1280,
+                        width: 1200,
                         height: 1920,
                       },
                       warp: {

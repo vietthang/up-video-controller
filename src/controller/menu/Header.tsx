@@ -13,9 +13,14 @@ import { SaveRenderMenuItem } from './SaveRenderMenuItem'
 export interface HeaderProps {
   appState: AppState
   setAppState: Dispatch<SetStateAction<AppState>>
+  rendererWindow: Window | null
 }
 
-export const AppHeader: React.FC<HeaderProps> = ({ appState, setAppState }) => {
+export const AppHeader: React.FC<HeaderProps> = ({
+  appState,
+  setAppState,
+  rendererWindow,
+}) => {
   const onClickPlay = useCallback(
     () => setAppState(oldState => ({ ...oldState, isPlaying: true })),
     [setAppState],
@@ -65,6 +70,13 @@ export const AppHeader: React.FC<HeaderProps> = ({ appState, setAppState }) => {
   const onOkLoadConfigModal = useCallback(() => {
     setIsShowLoadConfigModal(false)
   }, [setIsShowLoadConfigModal])
+
+  const onClickRefresh = useCallback(() => {
+    if (!rendererWindow) {
+      return
+    }
+    rendererWindow.location.reload()
+  }, [rendererWindow])
 
   return (
     <>
@@ -126,10 +138,20 @@ export const AppHeader: React.FC<HeaderProps> = ({ appState, setAppState }) => {
           zIndex: 1,
           width: '100%',
           backgroundColor: 'rgba(0, 0, 0, 0)',
+          padding: 0,
         }}
       >
         <div style={{ width: '960px', margin: '0 auto' }}>
-          <div className="logo" />
+          <div
+            className="logo"
+            style={{
+              float: 'left',
+              padding: '0 16px',
+              background: 'distort.svg',
+              width: '48px',
+              height: '48px',
+            }}
+          ></div>
           <Menu
             selectable={false}
             mode="horizontal"
@@ -139,12 +161,28 @@ export const AppHeader: React.FC<HeaderProps> = ({ appState, setAppState }) => {
             <Menu.Item
               key="playPause"
               onClick={appState.isPlaying ? onClickPause : onClickPlay}
-              disabled={!appState.textureResource}
             >
               <Tooltip title={appState.isPlaying ? 'Pause' : 'Play'}>
                 <Icon
-                  type={appState.isPlaying ? 'pause-circle' : 'play-circle'}
-                  title={appState.isPlaying ? 'Pause' : 'Play'}
+                  type={appState.isPlaying ? 'stop' : 'play-circle'}
+                  title={appState.isPlaying ? 'Stop' : 'Play'}
+                  style={{
+                    fontSize: '32px',
+                    marginRight: 0,
+                    lineHeight: '64px',
+                  }}
+                />
+              </Tooltip>
+            </Menu.Item>
+            <Menu.Item
+              key="refresh"
+              onClick={onClickRefresh}
+              disabled={!rendererWindow}
+            >
+              <Tooltip title={'Refresh'}>
+                <Icon
+                  type="reload"
+                  title={'Refresh'}
                   style={{
                     fontSize: '32px',
                     marginRight: 0,

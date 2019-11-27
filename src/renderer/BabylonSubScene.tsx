@@ -1,4 +1,3 @@
-import { notification } from 'antd'
 import {
   Engine,
   FreeCamera,
@@ -29,7 +28,7 @@ function loadVideoTexture(
   scene: Scene,
   resource: VideoTextureResource,
 ): VideoTexture {
-  return new VideoTexture(
+  const v = new VideoTexture(
     'video',
     resource.url,
     scene,
@@ -42,45 +41,28 @@ function loadVideoTexture(
       loop: true,
     },
   )
+  return v
 }
 
 export function useTexture(
   scene: Scene,
   textureResource?: TextureResource,
-): [Texture, Dispatch<boolean> | undefined] {
-  const [texture, setIsPlaying] = useMemo<
-    [Texture, Dispatch<boolean> | undefined]
-  >(() => {
+): Texture {
+  const texture = useMemo<Texture>(() => {
     if (!textureResource) {
-      return [new Texture(null, scene), undefined] // return empty texture
+      return new Texture(null, scene)
     }
     switch (textureResource.type) {
       case 'image':
-        return [loadImageTexture(scene, textureResource), undefined]
+        return loadImageTexture(scene, textureResource)
       case 'video':
-        const videoTexture = loadVideoTexture(scene, textureResource)
-        return [
-          videoTexture,
-          isPlaying => {
-            if (isPlaying && videoTexture.video.paused) {
-              videoTexture.video
-                .play()
-                .catch(error => notification.error({ message: error }))
-              return
-            }
-
-            if (!isPlaying && !videoTexture.video.paused) {
-              videoTexture.video.pause()
-              return
-            }
-          },
-        ]
+        return loadVideoTexture(scene, textureResource)
     }
   }, [scene, textureResource])
 
   useEffect(() => () => texture.dispose(), [texture])
 
-  return [texture, setIsPlaying]
+  return texture
 }
 
 export interface BabylonSubSceneProps {
@@ -92,7 +74,6 @@ export interface BabylonSubSceneProps {
 }
 
 export const BabylonSubScene: React.FC<BabylonSubSceneProps> = ({
-  isPlaying,
   canvas,
   viewPort,
   textureResource,
@@ -110,10 +91,7 @@ export const BabylonSubScene: React.FC<BabylonSubSceneProps> = ({
 
   useEffect(() => () => scene.dispose(), [scene])
 
-  const [texture, setIsPlaying] = useTexture(scene, textureResource)
-  useEffect(() => {
-    setIsPlaying && setIsPlaying(isPlaying)
-  }, [isPlaying, setIsPlaying])
+  const texture = useTexture(scene, textureResource)
 
   useEffect(() => {
     const camera = new FreeCamera(
