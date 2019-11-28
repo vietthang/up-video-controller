@@ -3,11 +3,11 @@ import FileSaver from 'file-saver'
 import React, { FormEvent, useCallback, useState } from 'react'
 import { doHooks } from '../../common'
 import { useGenerateRenderPrimitives } from '../../renderer/render'
-import { AppState } from '../../state'
+import { PersistentAppState } from '../../state'
 import protos from '../protos/scene_pb'
 
 export interface SaveRenderMenuItemProps {
-  appState: AppState
+  appState: PersistentAppState
 }
 
 export const SaveRenderMenuItem: React.FC<SaveRenderMenuItemProps> = ({
@@ -24,18 +24,12 @@ export const SaveRenderMenuItem: React.FC<SaveRenderMenuItemProps> = ({
           // eslint-disable-next-line
           useGenerateRenderPrimitives({
             sampler,
-            textureWidth:
-              (appState.textureResource && appState.textureResource.width) || 1,
-            textureHeight:
-              (appState.textureResource && appState.textureResource.height) ||
-              1,
+            textureWidth: appState.inputWindow.region.width,
+            textureHeight: appState.inputWindow.region.height,
             useMemo: hooks.useMemo,
             useEffect: hooks.useEffect,
           }),
         )
-        console.log('positionBuffer', positionBuffer)
-        console.log('uvBuffer', uvBuffer)
-        console.log('indexBuffer', indexBuffer)
         const renderItem = new protos.RenderItem()
         renderItem.setVertexcount(positionBuffer.length / 3)
         renderItem.setPositionbuffer(new Uint8Array(positionBuffer.buffer))

@@ -1,5 +1,5 @@
 import PouchDb from 'pouchdb'
-import { AppState } from '../state'
+import { PersistentAppState } from '../state'
 
 export interface Id {
   _id: string
@@ -8,7 +8,7 @@ export interface Id {
 
 export interface StoreItemDao {
   _id: string
-  state: AppState
+  state: PersistentAppState
   name: string
   createdAt: Date
 }
@@ -34,7 +34,7 @@ export async function listStoreItems(): Promise<StoreItem[]> {
 }
 
 export async function saveStoreItem(
-  state: AppState,
+  state: PersistentAppState,
   name?: string,
   date?: Date,
 ): Promise<StoreItem> {

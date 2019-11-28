@@ -1,7 +1,7 @@
 import { Icon, Layout, List, Menu, Modal, notification, Tooltip } from 'antd'
 import { remove } from 'ramda'
 import React, { Dispatch, SetStateAction, useCallback, useState } from 'react'
-import { AppState } from '../../state'
+import { PersistentAppState } from '../../state'
 import {
   deleteStoreItem,
   listStoreItems,
@@ -11,15 +11,15 @@ import {
 import { SaveRenderMenuItem } from './SaveRenderMenuItem'
 
 export interface HeaderProps {
-  appState: AppState
-  setAppState: Dispatch<SetStateAction<AppState>>
-  rendererWindow: Window | null
+  appState: PersistentAppState
+  setAppState: Dispatch<SetStateAction<PersistentAppState>>
+  refresh: () => void
 }
 
 export const AppHeader: React.FC<HeaderProps> = ({
   appState,
   setAppState,
-  rendererWindow,
+  refresh,
 }) => {
   const onClickPlay = useCallback(
     () => setAppState(oldState => ({ ...oldState, isPlaying: true })),
@@ -70,13 +70,6 @@ export const AppHeader: React.FC<HeaderProps> = ({
   const onOkLoadConfigModal = useCallback(() => {
     setIsShowLoadConfigModal(false)
   }, [setIsShowLoadConfigModal])
-
-  const onClickRefresh = useCallback(() => {
-    if (!rendererWindow) {
-      return
-    }
-    rendererWindow.location.reload()
-  }, [rendererWindow])
 
   return (
     <>
@@ -174,11 +167,7 @@ export const AppHeader: React.FC<HeaderProps> = ({
                 />
               </Tooltip>
             </Menu.Item>
-            <Menu.Item
-              key="refresh"
-              onClick={onClickRefresh}
-              disabled={!rendererWindow}
-            >
+            <Menu.Item key="refresh" onClick={refresh}>
               <Tooltip title={'Refresh'}>
                 <Icon
                   type="reload"

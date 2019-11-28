@@ -45,6 +45,40 @@ function useDisplays(): Display[] {
     }
   }, [])
 
+  useEffectAsync(() => {
+    if (!window.nw) {
+      return
+    }
+
+    nw.Screen.Init()
+
+    const syncDisplays = () => {
+      setDisplays(
+        nw.Screen.screens.map(display => ({
+          id: display.id.toString(),
+          viewPort: {
+            left: display.bounds.x,
+            top: display.bounds.y,
+            width: display.bounds.width,
+            height: display.bounds.height,
+          },
+        })),
+      )
+    }
+
+    nw.Screen.addListener('displayBoundsChanged', syncDisplays)
+    nw.Screen.addListener('displayAdded', syncDisplays)
+    nw.Screen.addListener('displayRemoved', syncDisplays)
+
+    syncDisplays()
+
+    return () => {
+      nw.Screen.removeListener('displayRemoved', syncDisplays)
+      nw.Screen.removeListener('displayAdded', syncDisplays)
+      nw.Screen.removeListener('displayBoundsChanged', syncDisplays)
+    }
+  }, [setDisplays])
+
   return displays
 }
 

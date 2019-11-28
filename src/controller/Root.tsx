@@ -3,173 +3,65 @@ import './Root.css'
 
 import {
   Button,
+  Col,
   Collapse,
   Divider,
   Form,
-  Icon,
+  Input,
+  InputNumber,
   Layout,
-  notification,
   PageHeader,
-  Upload,
+  Radio,
+  Row,
+  Select,
+  Slider,
+  Switch,
 } from 'antd'
-import { RcFile, UploadFile } from 'antd/lib/upload/interface'
-import { indexOf, remove } from 'ramda'
-import React, {
-  Dispatch,
-  SetStateAction,
-  useCallback,
-  useEffect,
-  useState,
-} from 'react'
+import { remove } from 'ramda'
+import React, { useCallback } from 'react'
 import { generateControlPoints, useSelectSetter } from '../common'
-import { AppState, Sampler, TextureResource } from '../state'
+import { PersistentAppState, Sampler, useAppState, useWindow } from '../state'
 import { DisplayView } from './DisplayView'
 import { AppHeader } from './menu/Header'
 import { SamplerHeader } from './SamplerHeader'
 import { SamplerView } from './SamplerView'
 
 const { Content } = Layout
-const { Dragger } = Upload
-
-declare global {
-  interface Window {
-    appState?: AppState
-    setAppState?: Dispatch<SetStateAction<AppState>>
-  }
-}
 
 export const Root: React.FunctionComponent = React.memo(() => {
-  const [appState, setAppState] = useState<AppState>({
-    viewPort: {
-      left: 0,
-      top: 0,
-      width: 600,
-      height: 400,
-    },
-    samplers: [],
-    isPlaying: false,
+  const { persistentState, setPersistentState } = useAppState()
+  const setterSelect = useSelectSetter<PersistentAppState>(setPersistentState)
+
+  const rendererWindowState = useWindow({
+    url: new URL('./?app=renderer', window.location.href).href,
+    enabled: persistentState.isPlaying,
+    options: { resizable: false, frame: false },
+    target: 'renderer',
+    region: persistentState.outputRegion,
   })
-  const setterSelect = useSelectSetter<AppState>(setAppState)
-  const [fileList, setFileList] = useState<UploadFile[]>([])
-  const [rendererWindow, setRendererWindow] = useState<Window | null>(null)
 
-  useEffect(() => {
-    if (!appState.isPlaying) {
+  const refresh = useCallback(() => {
+    if (rendererWindowState.state !== 'resolved') {
       return
     }
 
-    const newRendererWindow = window.open(
-      './?app=renderer',
-      'renderer',
-      `menubar=no,status=no,titlebar=no,toolbar=no,frame=0`,
-    )
-    if (!newRendererWindow) {
-      notification.error({ message: 'Failed to open new window' })
-      return
-    }
-    setRendererWindow(newRendererWindow)
+    rendererWindowState.value.location.reload()
+  }, [rendererWindowState])
 
-    return () => {
-      newRendererWindow.close()
-      setRendererWindow(null)
-    }
-  }, [appState.isPlaying])
-
-  useEffect(() => {
-    if (!rendererWindow) {
-      return
-    }
-
-    rendererWindow.window.moveTo(appState.viewPort.left, appState.viewPort.top)
-    rendererWindow.window.resizeTo(
-      appState.viewPort.width,
-      appState.viewPort.height,
-    )
-  }, [
-    rendererWindow,
-    appState.viewPort.left,
-    appState.viewPort.top,
-    appState.viewPort.width,
-    appState.viewPort.height,
-  ])
-
-  useEffect(() => {
-    window.setAppState = setAppState
-  }, [setAppState])
-
-  useEffect(() => {
-    const event = new Event('appStateChanged')
-    event.appState = appState
-    window.appState = appState
-    window.dispatchEvent(event)
-  }, [appState])
-
-  const handleBeforeUpload = useCallback(
-    (file: RcFile) => {
-      const setTextureResource = (textureResource: TextureResource): void => {
-        setAppState(appState => ({ ...appState, textureResource }))
-      }
-
-      const loadImage = (url: string) => {
-        const image = document.createElement('img')
-        image.src = url
-        image.addEventListener('load', () => {
-          setTextureResource({
-            type: 'image',
-            url,
-            width: image.width,
-            height: image.height,
-          })
-        })
-      }
-
-      const loadVideo = (url: string) => {
-        const video = document.createElement('video')
-        video.src = url
-        video.autoplay = true
-        video.loop = true
-        video.addEventListener('loadedmetadata', () => {
-          setTextureResource({
-            type: 'video',
-            url,
-            width: video.videoWidth,
-            height: video.videoHeight,
-          })
-        })
-      }
-      const fileUrl = URL.createObjectURL(file)
-
-      switch (true) {
-        case file.name.endsWith('.mp4'):
-          loadVideo(fileUrl)
-          break
-        case file.name.endsWith('.jpg'):
-        case file.name.endsWith('.jpeg'):
-        case file.name.endsWith('.png'):
-          loadImage(fileUrl)
-          break
-      }
-
-      setFileList([file])
-      return false
-    },
-    [setAppState, setFileList],
-  )
-
-  const handleRemove = useCallback(
-    (file: UploadFile<any>) => {
-      setterSelect<TextureResource | undefined>('textureResource')(undefined)
-      setFileList(fileList => remove(indexOf(file, fileList), 1, fileList))
-    },
-    [setterSelect, setFileList],
-  )
+  useWindow({
+    url: new URL('./?app=content', window.location.href).href,
+    enabled: persistentState.isPlaying,
+    options: { resizable: false, frame: false, transparent: true },
+    target: 'content',
+    region: persistentState.inputWindow.region,
+  })
 
   return (
     <Layout>
       <AppHeader
-        appState={appState}
-        setAppState={setAppState}
-        rendererWindow={rendererWindow}
+        appState={persistentState}
+        setAppState={setPersistentState}
+        refresh={refresh}
       />
       <Content
         style={{
@@ -192,31 +84,66 @@ export const Root: React.FunctionComponent = React.memo(() => {
         >
           <div id="main">
             <Divider>
-              <h2>Pick Video File</h2>
+              <h2>Input HTML</h2>
             </Divider>
-
-            <Dragger
-              multiple={false}
-              directory={false}
-              accept="video/*,image/*"
-              fileList={fileList}
-              beforeUpload={handleBeforeUpload}
-              onRemove={handleRemove}
-            >
-              <p className="ant-upload-drag-icon">
-                <Icon type="inbox" />
-              </p>
-              <p className="ant-upload-text">
-                Click or drag file to this area to select file
-              </p>
-            </Dragger>
+            <Form.Item label="Opacity" labelAlign="left">
+              <Row>
+                <Col span={16}>
+                  <Slider
+                    min={0}
+                    max={1}
+                    step={1 / 255}
+                    value={persistentState.inputWindow.opacity}
+                    onChange={value => {
+                      if (Array.isArray(value)) {
+                        return
+                      }
+                      setterSelect('inputWindow', 'opacity')(value)
+                    }}
+                  ></Slider>
+                </Col>
+                <Col span={8}>
+                  <InputNumber
+                    min={0}
+                    max={1}
+                    step={1 / 255}
+                    style={{ marginLeft: 16 }}
+                    value={persistentState.inputWindow.opacity}
+                    onChange={setterSelect('inputWindow', 'opacity')}
+                  />
+                </Col>
+              </Row>
+            </Form.Item>
+            <Form.Item label="Content Tag" labelAlign="left">
+              <Radio.Group
+                value={persistentState.inputWindow.contentTag}
+                onChange={event =>
+                  setterSelect('inputWindow', 'contentTag')(event.target.value)
+                }
+              >
+                <Radio value="webview">webview</Radio>
+                <Radio value="iframe">iframe</Radio>
+              </Radio.Group>
+            </Form.Item>
+            <Form.Item label="URL" labelAlign="left">
+              <Input
+                value={persistentState.inputWindow.url}
+                onChange={evt => {
+                  setterSelect<string>('inputWindow', 'url')(evt.target.value)
+                }}
+              ></Input>
+            </Form.Item>
+            <DisplayView
+              viewport={persistentState.inputWindow.region}
+              setViewport={setterSelect('inputWindow', 'region')}
+            />
 
             <Divider>
               <h2>Setup Canvas Viewport</h2>
             </Divider>
             <DisplayView
-              viewport={appState.viewPort}
-              setViewport={setterSelect('viewPort')}
+              viewport={persistentState.outputRegion}
+              setViewport={setterSelect('outputRegion')}
             />
 
             <Divider>
@@ -225,22 +152,16 @@ export const Root: React.FunctionComponent = React.memo(() => {
 
             <Collapse
               bordered={true}
-              activeKey={appState.samplers.map((_, index) => index.toString())}
+              activeKey={persistentState.samplers.map((_, index) =>
+                index.toString(),
+              )}
             >
-              {appState.samplers.map((sampler, index) => (
+              {persistentState.samplers.map((sampler, index) => (
                 <SamplerView
-                  videoWidth={
-                    appState.textureResource
-                      ? appState.textureResource.width
-                      : 1
-                  }
-                  videoHeight={
-                    appState.textureResource
-                      ? appState.textureResource.height
-                      : 1
-                  }
-                  outputWidth={appState.viewPort.width}
-                  outputHeight={appState.viewPort.height}
+                  videoWidth={persistentState.inputWindow.region.width}
+                  videoHeight={persistentState.inputWindow.region.height}
+                  outputWidth={persistentState.outputRegion.width}
+                  outputHeight={persistentState.outputRegion.height}
                   sampler={sampler}
                   key={index.toString()}
                   header={

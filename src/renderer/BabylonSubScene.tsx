@@ -7,77 +7,67 @@ import {
   Vector3,
   VideoTexture,
 } from 'babylonjs'
-import React, { Dispatch, useEffect, useMemo } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { Region } from '../common'
-import {
-  ImageTextureResource,
-  Sampler,
-  TextureResource,
-  VideoTextureResource,
-} from '../state'
+import { Sampler } from '../state'
+import { AsyncState } from '../utils'
 import { BabylonMeshNode } from './BabylonMeshNode'
-
-function loadImageTexture(
-  scene: Scene,
-  resource: ImageTextureResource,
-): Texture {
-  return new Texture(resource.url, scene)
-}
-
-function loadVideoTexture(
-  scene: Scene,
-  resource: VideoTextureResource,
-): VideoTexture {
-  const v = new VideoTexture(
-    'video',
-    resource.url,
-    scene,
-    false,
-    undefined,
-    undefined,
-    {
-      autoUpdateTexture: true,
-      autoPlay: true,
-      loop: true,
-    },
-  )
-  return v
-}
 
 export function useTexture(
   scene: Scene,
-  textureResource?: TextureResource,
+  mediaStreamState: AsyncState<MediaStream>,
 ): Texture {
-  const texture = useMemo<Texture>(() => {
-    if (!textureResource) {
-      return new Texture(null, scene)
-    }
-    switch (textureResource.type) {
-      case 'image':
-        return loadImageTexture(scene, textureResource)
-      case 'video':
-        return loadVideoTexture(scene, textureResource)
-    }
-  }, [scene, textureResource])
+  const [texture, setTexture] = useState(new Texture(null, scene))
 
-  useEffect(() => () => texture.dispose(), [texture])
+  useEffect(() => {
+    if (mediaStreamState.state !== 'resolved') {
+      return
+    }
+
+    const video = document.createElement('video')
+    video.autoplay = true
+    video.loop = true
+    video.srcObject = mediaStreamState.value
+
+    const texture = new VideoTexture(
+      'video',
+      video,
+      scene,
+      false,
+      undefined,
+      undefined,
+      {
+        autoUpdateTexture: true,
+        autoPlay: true,
+        loop: true,
+      },
+    )
+    setTexture(texture)
+
+    return () => {
+      texture.dispose()
+    }
+  }, [mediaStreamState])
 
   return texture
 }
 
 export interface BabylonSubSceneProps {
-  isPlaying: boolean
   canvas: HTMLCanvasElement
   viewPort: Region
-  textureResource?: TextureResource
   samplers: Sampler[]
+  inputWidth: number
+  inputHeight: number
+  mediaStreamState: AsyncState<MediaStream>
 }
 
 export const BabylonSubScene: React.FC<BabylonSubSceneProps> = ({
   canvas,
   viewPort,
-  textureResource,
   samplers,
+  inputWidth,
+  inputHeight,
+  mediaStreamState,
 }) => {
   const renderer = useMemo(() => {
     return new Engine(canvas, true)
@@ -91,7 +81,7 @@ export const BabylonSubScene: React.FC<BabylonSubSceneProps> = ({
 
   useEffect(() => () => scene.dispose(), [scene])
 
-  const texture = useTexture(scene, textureResource)
+  const texture = useTexture(scene, mediaStreamState)
 
   useEffect(() => {
     const camera = new FreeCamera(
@@ -151,8 +141,8 @@ export const BabylonSubScene: React.FC<BabylonSubSceneProps> = ({
             key={index.toString()}
             texture={texture}
             sampler={sampler}
-            videoWidth={(textureResource && textureResource.width) || 1}
-            videoHeight={(textureResource && textureResource.height) || 1}
+            videoWidth={inputWidth}
+            videoHeight={inputHeight}
             mesh={meshes[index]}
             scene={scene}
           ></BabylonMeshNode>

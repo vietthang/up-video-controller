@@ -1,24 +1,20 @@
 /// <reference types="react-scripts" />
 
-import 'electron'
-
 declare module 'react-dnd-mouse-backend' {
   const e: any
   export default e
 }
 
 import { Dispatch, SetStateAction } from 'react'
-import { AppState } from './state'
+import { AppState, PersistentAppState, TransientAppState } from './state'
 
 declare global {
   interface Window {
-    parentApp?: {
-      appState: AppState
-      setAppState: Dispatch<SetStateAction<AppState>>
-    }
+    appState?: AppState
   }
 
   interface Event {
-    appState?: AppState
+    persistentState?: PersistentAppState
+    transientState?: TransientAppState
   }
 }

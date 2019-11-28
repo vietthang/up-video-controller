@@ -1,0 +1,6 @@
+body,
+iframe,
+webview {
+  background-color: transparent !important;
+  border: none;
+}

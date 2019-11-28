@@ -1,30 +1,34 @@
 import React, { useState } from 'react'
-import { AppState } from '../state'
+import { PersistentAppState, TransientAppState } from '../state'
 import { BabylonSubScene } from './BabylonSubScene'
 
-export const BabylonScene: React.FC<AppState> = ({
-  isPlaying,
-  textureResource,
-  samplers,
-  viewPort,
+export interface BabylonSceneProps {
+  persistentState: PersistentAppState
+  transientState: TransientAppState
+}
+
+export const BabylonScene: React.FC<BabylonSceneProps> = ({
+  persistentState,
+  transientState,
 }) => {
   const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null)
 
   return (
     <>
       <canvas
-        width={viewPort.width}
-        height={viewPort.height}
+        width={persistentState.outputRegion.width}
+        height={persistentState.outputRegion.height}
         ref={setCanvas}
       ></canvas>
 
       {canvas && (
         <BabylonSubScene
           canvas={canvas}
-          viewPort={viewPort}
-          samplers={samplers}
-          textureResource={textureResource}
-          isPlaying={isPlaying}
+          viewPort={persistentState.outputRegion}
+          samplers={persistentState.samplers}
+          inputWidth={persistentState.inputWindow.region.width}
+          inputHeight={persistentState.inputWindow.region.height}
+          mediaStreamState={transientState.mediaStream}
         ></BabylonSubScene>
       )}
     </>
