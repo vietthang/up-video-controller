@@ -35,7 +35,7 @@
     "@types/react-native": "^0.60.23",
     "antd": "^3.25.2",
     "babylonjs": "^4.0.3",
-    "electron": "^7.1.1",
+    "electron": "^13.6.6",
     "file-saver": "^2.0.2",
     "google-protobuf": "^3.10.0",
     "jest": "^24.9.0",
